@@ -18,14 +18,15 @@ import * as ReportUtils from '@libs/ReportUtils';
 import * as Session from '@userActions/Session';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
-import type {Beta, ReportAction, ReportActions} from '@src/types/onyx';
+import type {Beta, ReportAction, ReportActions, Transaction} from '@src/types/onyx';
+import {IOUMessage} from '@src/types/onyx/OriginalMessage';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import type {ContextMenuAction, ContextMenuActionPayload} from './ContextMenuActions';
 import ContextMenuActions from './ContextMenuActions';
 import type {ContextMenuAnchor, ContextMenuType} from './ReportActionContextMenu';
 import {hideContextMenu, showContextMenu} from './ReportActionContextMenu';
 
-type BaseReportActionContextMenuOnyxProps = {
+type BaseReportActionContextMenuOnyxPropsWithoutTransaction = {
     /** Beta features list */
     betas: OnyxEntry<Beta[]>;
 
@@ -33,8 +34,7 @@ type BaseReportActionContextMenuOnyxProps = {
     reportActions: OnyxEntry<ReportActions>;
 };
 
-type BaseReportActionContextMenuProps = BaseReportActionContextMenuOnyxProps & {
-    /** The ID of the report this report action is attached to. */
+type BaseReportActionContextMenuPropsWithoutTransaction = BaseReportActionContextMenuOnyxPropsWithoutTransaction & {
     reportID: string;
 
     /** The ID of the report action this context menu is attached to. */
@@ -91,6 +91,20 @@ type BaseReportActionContextMenuProps = BaseReportActionContextMenuOnyxProps & {
     setIsEmojiPickerActive?: (state: boolean) => void;
 };
 
+type BaseReportActionContextMenuTransactionOnyxProps = {
+    transaction: OnyxEntry<Transaction>;
+};
+
+type BaseReportActionContextMenuOnyxProps = {
+    /** Beta features list */
+    betas: OnyxEntry<Beta[]>;
+
+    /** All of the actions of the report */
+    reportActions: OnyxEntry<ReportActions>;
+};
+
+type BaseReportActionContextMenuProps = BaseReportActionContextMenuTransactionOnyxProps & BaseReportActionContextMenuPropsWithoutTransaction;
+
 type MenuItemRefs = Record<string, ContextMenuItemHandle | null>;
 
 function BaseReportActionContextMenu({
@@ -112,6 +126,7 @@ function BaseReportActionContextMenu({
     checkIfContextMenuActive,
     disabledActions = [],
     setIsEmojiPickerActive,
+    transaction,
 }: BaseReportActionContextMenuProps) {
     const StyleUtils = useStyleUtils();
     const {translate} = useLocalize();
@@ -237,6 +252,7 @@ function BaseReportActionContextMenu({
                         interceptAnonymousUser,
                         openOverflowMenu,
                         setIsEmojiPickerActive,
+                        transaction,
                     };
 
                     if ('renderContent' in contextAction) {
@@ -274,7 +290,7 @@ function BaseReportActionContextMenu({
     );
 }
 
-export default withOnyx<BaseReportActionContextMenuProps, BaseReportActionContextMenuOnyxProps>({
+export default withOnyx<BaseReportActionContextMenuPropsWithoutTransaction, BaseReportActionContextMenuOnyxPropsWithoutTransaction>({
     betas: {
         key: ONYXKEYS.BETAS,
     },
@@ -283,20 +299,29 @@ export default withOnyx<BaseReportActionContextMenuProps, BaseReportActionContex
         canEvict: false,
     },
 })(
-    memo(BaseReportActionContextMenu, (prevProps, nextProps) => {
-        const {reportActions: prevReportActions, ...prevPropsWithoutReportActions} = prevProps;
-        const {reportActions: nextReportActions, ...nextPropsWithoutReportActions} = nextProps;
+    withOnyx<BaseReportActionContextMenuProps, BaseReportActionContextMenuTransactionOnyxProps>({
+        transaction: {
+            key: ({reportActions, reportActionID}) => {
+                const reportAction = reportActions?.[reportActionID];
+                return `${ONYXKEYS.COLLECTION.TRANSACTION}${(reportAction?.originalMessage as IOUMessage)?.IOUTransactionID}`;
+            },
+        },
+    })(
+        memo(BaseReportActionContextMenu, (prevProps, nextProps) => {
+            const {reportActions: prevReportActions, ...prevPropsWithoutReportActions} = prevProps;
+            const {reportActions: nextReportActions, ...nextPropsWithoutReportActions} = nextProps;
 
-        const prevReportAction = prevReportActions?.[prevProps.reportActionID] ?? '';
-        const nextReportAction = nextReportActions?.[nextProps.reportActionID] ?? '';
+            const prevReportAction = prevReportActions?.[prevProps.reportActionID] ?? '';
+            const nextReportAction = nextReportActions?.[nextProps.reportActionID] ?? '';
 
-        // We only want to re-render when the report action that is attached to is changed
-        if (prevReportAction !== nextReportAction) {
-            return false;
-        }
+            // We only want to re-render when the report action that is attached to is changed
+            if (prevReportAction !== nextReportAction) {
+                return false;
+            }
 
-        return lodashIsEqual(prevPropsWithoutReportActions, nextPropsWithoutReportActions);
-    }),
+            return lodashIsEqual(prevPropsWithoutReportActions, nextPropsWithoutReportActions);
+        }),
+    ),
 );
 
 export type {BaseReportActionContextMenuProps};
