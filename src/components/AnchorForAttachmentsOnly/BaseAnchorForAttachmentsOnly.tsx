@@ -19,6 +19,7 @@ import type AnchorForAttachmentsOnlyProps from './types';
 type BaseAnchorForAttachmentsOnlyOnyxProps = {
     /** If a file download is happening */
     download: OnyxEntry<OnyxDownload>;
+    isDownloadingAttachment: OnyxEntry<boolean>;
 };
 
 type BaseAnchorForAttachmentsOnlyProps = AnchorForAttachmentsOnlyProps &
@@ -30,7 +31,7 @@ type BaseAnchorForAttachmentsOnlyProps = AnchorForAttachmentsOnlyProps &
         onPressOut?: () => void;
     };
 
-function BaseAnchorForAttachmentsOnly({style, source = '', displayName = '', download, onPressIn, onPressOut}: BaseAnchorForAttachmentsOnlyProps) {
+function BaseAnchorForAttachmentsOnly({style, source = '', displayName = '', download, onPressIn, onPressOut, isDownloadingAttachment}: BaseAnchorForAttachmentsOnlyProps) {
     const sourceURLWithAuth = addEncryptedAuthTokenToURL(source);
     const sourceID = (source.match(CONST.REGEX.ATTACHMENT_ID) ?? [])[1];
 
@@ -45,11 +46,12 @@ function BaseAnchorForAttachmentsOnly({style, source = '', displayName = '', dow
                 <PressableWithoutFeedback
                     style={[style, isOffline && styles.cursorDefault]}
                     onPress={() => {
-                        if (isDownloading || isOffline) {
+                        // For IOS mobile web safari we can't download multiple file at the same time, so donothing here if we're downloading another attachment
+                        if (isDownloading || isOffline || (isDownloadingAttachment && Browser.isMobileSafari())) {
                             return;
                         }
                         Download.setDownload(sourceID, true);
-                        fileDownload(sourceURLWithAuth, displayName, '', Browser.isMobileSafari()).then(() => Download.setDownload(sourceID, false));
+                        fileDownload(sourceURLWithAuth, displayName, '').then(() => Download.setDownload(sourceID, false));
                     }}
                     onPressIn={onPressIn}
                     onPressOut={onPressOut}
@@ -80,4 +82,7 @@ export default withOnyx<BaseAnchorForAttachmentsOnlyProps, BaseAnchorForAttachme
             return `${ONYXKEYS.COLLECTION.DOWNLOAD}${sourceID}`;
         },
     },
+    isDownloadingAttachment: {
+        key: ONYXKEYS.IS_DOWNLOADING_ATTACHMENT
+    }
 })(BaseAnchorForAttachmentsOnly);

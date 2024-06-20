@@ -251,6 +251,8 @@ const ONYXKEYS = {
     /** Is report data loading? */
     IS_LOADING_APP: 'isLoadingApp',
 
+    IS_DOWNLOADING_ATTACHMENT: 'isDownloadingAttachment',
+
     /** Is the user in the process of switching to OldDot? */
     IS_SWITCHING_TO_OLD_DOT: 'isSwitchingToOldDot',
 
@@ -690,6 +692,7 @@ type OnyxValuesMapping = {
     [ONYXKEYS.IS_TEST_TOOLS_MODAL_OPEN]: boolean;
     [ONYXKEYS.APP_PROFILING_IN_PROGRESS]: boolean;
     [ONYXKEYS.IS_LOADING_APP]: boolean;
+    [ONYXKEYS.IS_DOWNLOADING_ATTACHMENT]: boolean;
     [ONYXKEYS.IS_SWITCHING_TO_OLD_DOT]: boolean;
     [ONYXKEYS.WALLET_TRANSFER]: OnyxTypes.WalletTransfer;
     [ONYXKEYS.LAST_ACCESSED_WORKSPACE_POLICY_ID]: string;
