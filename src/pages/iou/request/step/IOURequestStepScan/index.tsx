@@ -44,6 +44,43 @@ import type {Receipt} from '@src/types/onyx/Transaction';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import NavigationAwareCamera from './NavigationAwareCamera/WebCamera';
 import type {IOURequestStepOnyxProps, IOURequestStepScanProps} from './types';
+import ImageSize from 'react-native-image-size';
+import {manipulateAsync} from 'expo-image-manipulator';
+import {Str} from 'expensify-common';
+
+const MAX_IMAGE_DIMENSION = 2400;
+const getImageDimensionsAfterResize = (file: FileObject) => 
+    ImageSize.getSize(file.uri).then(({width, height}) => {
+        let newWidth, newHeight;
+        if (width < height) {
+            newHeight = MAX_IMAGE_DIMENSION;
+            newWidth = newHeight * width / height;
+        } else {
+            newWidth = MAX_IMAGE_DIMENSION;
+            newHeight = newWidth * height / width;
+        }
+
+    
+        return { width: newWidth, height: newHeight };
+    });
+
+const resizeImageIfNeeded = (file: FileObject) => {
+    if (!file || !Str.isImage(file.name) || (file?.size ?? 0) <= CONST.API_ATTACHMENT_VALIDATIONS.MAX_SIZE) {
+        return Promise.resolve(file);
+    }
+    return getImageDimensionsAfterResize(file).then(({width, height}) => 
+        manipulateAsync(file.uri, [{resize: {width, height}}]).then((result) => {
+            return fetch(result.uri)
+                .then((res) => res.blob())
+                .then((blob) => {
+                    const resizedFile = new File([blob], `${file.name}.jpeg`, {type: 'image/jpeg'});
+                    resizedFile.uri = URL.createObjectURL(resizedFile);
+                    return resizedFile;
+                });
+        })
+    );
+}
+    
 
 function IOURequestStepScan({
     report,
@@ -203,7 +240,7 @@ function IOURequestStepScan({
                     return false;
                 }
 
-                if ((file?.size ?? 0) > CONST.API_ATTACHMENT_VALIDATIONS.MAX_SIZE) {
+                if (!Str.isImage(file.name) && (file?.size ?? 0) > CONST.API_ATTACHMENT_VALIDATIONS.MAX_SIZE) {
                     setUploadReceiptError(true, 'attachmentPicker.attachmentTooLarge', 'attachmentPicker.sizeExceeded');
                     return false;
                 }
@@ -425,21 +462,24 @@ function IOURequestStepScan({
     /**
      * Sets the Receipt objects and navigates the user to the next page
      */
-    const setReceiptAndNavigate = (file: FileObject) => {
-        validateReceipt(file).then((isFileValid) => {
+    const setReceiptAndNavigate = (originalFile: FileObject) => {
+        validateReceipt(originalFile).then((isFileValid) => {
             if (!isFileValid) {
                 return;
             }
-            // Store the receipt on the transaction object in Onyx
-            const source = URL.createObjectURL(file as Blob);
-            // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-            IOU.setMoneyRequestReceipt(transactionID, source, file.name || '', action !== CONST.IOU.ACTION.EDIT);
 
-            if (action === CONST.IOU.ACTION.EDIT) {
-                updateScanAndNavigate(file, source);
-                return;
-            }
-            navigateToConfirmationStep(file, source);
+            resizeImageIfNeeded(originalFile).then((file) => {
+                // Store the receipt on the transaction object in Onyx
+                const source = URL.createObjectURL(file as Blob);
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                IOU.setMoneyRequestReceipt(transactionID, source, file.name || '', action !== CONST.IOU.ACTION.EDIT);
+
+                if (action === CONST.IOU.ACTION.EDIT) {
+                    updateScanAndNavigate(file, source);
+                    return;
+                }
+                navigateToConfirmationStep(file, source);
+            });
         });
     };
 
