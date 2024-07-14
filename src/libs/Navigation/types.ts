@@ -960,6 +960,10 @@ type ProcessMoneyRequestHoldNavigatorParamList = {
     [SCREENS.PROCESS_MONEY_REQUEST_HOLD_ROOT]: undefined;
 };
 
+type TrackExpenseNavigatorParamList = {
+    [SCREENS.TRACK_EXPENSE_ROOT]: undefined;
+};
+
 type PrivateNotesNavigatorParamList = {
     [SCREENS.PRIVATE_NOTES.LIST]: undefined;
     [SCREENS.PRIVATE_NOTES.EDIT]: {
@@ -1031,6 +1035,7 @@ type RightModalNavigatorParamList = {
     [SCREENS.RIGHT_MODAL.TRAVEL]: NavigatorScreenParams<TravelNavigatorParamList>;
     [SCREENS.RIGHT_MODAL.SEARCH_REPORT]: NavigatorScreenParams<SearchReportParamList>;
     [SCREENS.RIGHT_MODAL.RESTRICTED_ACTION]: NavigatorScreenParams<RestrictedActionParamList>;
+    [SCREENS.RIGHT_MODAL.TRACK_EXPENSE]: undefined;
 };
 
 type TravelNavigatorParamList = {
@@ -1300,4 +1305,5 @@ export type {
     TransactionDuplicateNavigatorParamList,
     SearchReportParamList,
     RestrictedActionParamList,
+    TrackExpenseNavigatorParamList
 };

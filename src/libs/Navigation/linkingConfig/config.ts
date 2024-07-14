@@ -856,6 +856,11 @@ const config: LinkingOptions<RootStackParamList>['config'] = {
                         [SCREENS.IOU_SEND.ADD_DEBIT_CARD]: ROUTES.IOU_SEND_ADD_DEBIT_CARD,
                     },
                 },
+                [SCREENS.RIGHT_MODAL.TRACK_EXPENSE]: {
+                    screens: {
+                        [SCREENS.TRACK_EXPENSE_ROOT]: ROUTES.TRACK_EXPENSE,
+                    }
+                },
                 [SCREENS.RIGHT_MODAL.TRANSACTION_DUPLICATE]: {
                     screens: {
                         [SCREENS.TRANSACTION_DUPLICATE.REVIEW]: {

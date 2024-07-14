@@ -18,7 +18,6 @@ import Overlay from './Overlay';
 type RightModalNavigatorProps = StackScreenProps<AuthScreensParamList, typeof NAVIGATORS.RIGHT_MODAL_NAVIGATOR>;
 
 const Stack = createStackNavigator<RightModalNavigatorParamList>();
-
 function RightModalNavigator({navigation}: RightModalNavigatorProps) {
     const styles = useThemeStyles();
     const styleUtils = useStyleUtils();
@@ -160,6 +159,10 @@ function RightModalNavigator({navigation}: RightModalNavigatorProps) {
                     <Stack.Screen
                         name={SCREENS.RIGHT_MODAL.SEARCH_REPORT}
                         component={ModalStackNavigators.SearchReportModalStackNavigator}
+                    />
+                    <Stack.Screen 
+                        name={SCREENS.RIGHT_MODAL.TRACK_EXPENSE}
+                        component={ModalStackNavigators.TrackExpenseStackNavigator}
                     />
                     <Stack.Screen
                         name={SCREENS.RIGHT_MODAL.RESTRICTED_ACTION}

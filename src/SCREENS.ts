@@ -147,6 +147,8 @@ const SCREENS = {
         SEARCH_REPORT: 'SearchReport',
         SETTINGS_CATEGORIES: 'SettingsCategories',
         RESTRICTED_ACTION: 'RestrictedAction',
+        TRACK_EXPENSE: 'track-expense',
+        SUBMIT_EXPENSE: 'submit-expense'
     },
     ONBOARDING_MODAL: {
         ONBOARDING: 'Onboarding',
@@ -449,6 +451,7 @@ const SCREENS = {
     DETAILS_ROOT: 'Details_Root',
     PROFILE_ROOT: 'Profile_Root',
     PROCESS_MONEY_REQUEST_HOLD_ROOT: 'ProcessMoneyRequestHold_Root',
+    TRACK_EXPENSE_ROOT: 'TrackExpense_Root',
     REPORT_DESCRIPTION_ROOT: 'Report_Description_Root',
     REPORT_PARTICIPANTS: {
         ROOT: 'ReportParticipants_Root',

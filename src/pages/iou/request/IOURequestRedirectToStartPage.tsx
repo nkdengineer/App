@@ -15,6 +15,7 @@ function IOURequestRedirectToStartPage({
         params: {iouType, iouRequestType},
     },
 }: IOURequestRedirectToStartPageProps) {
+    console.log(iouType);
     const isIouTypeValid = Object.values(CONST.IOU.TYPE).includes(iouType);
     const isIouRequestTypeValid = Object.values(CONST.IOU.REQUEST_TYPE).includes(iouRequestType);
 

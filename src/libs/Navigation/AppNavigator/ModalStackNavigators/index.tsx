@@ -473,6 +473,10 @@ const ProcessMoneyRequestHoldStackNavigator = createModalStackNavigator({
     [SCREENS.PROCESS_MONEY_REQUEST_HOLD_ROOT]: () => require<ReactComponentModule>('../../../../pages/ProcessMoneyRequestHoldPage').default,
 });
 
+const TrackExpenseStackNavigator = createModalStackNavigator({
+    [SCREENS.TRACK_EXPENSE_ROOT]: () => require<ReactComponentModule>('../../../../pages/TrackExpensePage').default,
+});
+
 const TransactionDuplicateStackNavigator = createModalStackNavigator<TransactionDuplicateNavigatorParamList>({
     [SCREENS.TRANSACTION_DUPLICATE.REVIEW]: () => require<ReactComponentModule>('../../../../pages/TransactionDuplicate/Review').default,
     [SCREENS.TRANSACTION_DUPLICATE.MERCHANT]: () => require<ReactComponentModule>('../../../../pages/TransactionDuplicate/ReviewMerchant').default,
@@ -523,4 +527,5 @@ export {
     TransactionDuplicateStackNavigator,
     SearchReportModalStackNavigator,
     RestrictedActionModalStackNavigator,
+    TrackExpenseStackNavigator
 };
