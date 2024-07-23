@@ -87,7 +87,7 @@ function ReportFieldsSettingsPage({
                 {isListFieldType && (
                     <MenuItemWithTopDescription
                         style={[styles.moneyRequestMenuItem]}
-                        titleStyle={{...styles.flex1, ...styles.preWrap}}
+                        titleStyle={{...styles.flex1, ...styles.preWrap, ...styles.breakAll}}
                         description={translate('workspace.reportFields.listValues')}
                         shouldShowRightIcon
                         title={reportFieldValues.join(', ')}

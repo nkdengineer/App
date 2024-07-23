@@ -172,7 +172,7 @@ function CreateReportFieldsPage({
                                 <MenuItemWithTopDescription
                                     description={translate('workspace.reportFields.listValues')}
                                     shouldShowRightIcon
-                                    titleStyle={{...styles.flex1, ...styles.preWrap}}
+                                    titleStyle={{...styles.flex1, ...styles.preWrap, ...styles.breakAll}}
                                     title={(formDraft?.[INPUT_IDS.LIST_VALUES] ?? []).join(', ')}
                                     onPress={() => Navigation.navigate(ROUTES.WORKSPACE_REPORT_FIELDS_LIST_VALUES.getRoute(policyID))}
                                 />
