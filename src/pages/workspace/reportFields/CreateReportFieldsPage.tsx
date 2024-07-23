@@ -110,86 +110,88 @@ function CreateReportFieldsPage({
                     title={translate('workspace.reportFields.addField')}
                     onBackButtonPress={Navigation.goBack}
                 />
-                <FormProvider
-                    ref={formRef}
-                    style={[styles.mh5, styles.flex1]}
-                    formID={ONYXKEYS.FORMS.WORKSPACE_REPORT_FIELDS_FORM}
-                    onSubmit={submitForm}
-                    validate={validateForm}
-                    submitButtonText={translate('common.save')}
-                    enabledWhenOffline
-                    shouldValidateOnBlur={false}
-                    disablePressOnEnter={false}
-                >
-                    {({inputValues}) => (
-                        <View style={styles.mhn5}>
-                            <InputWrapper
-                                InputComponent={TextPicker}
-                                inputID={INPUT_IDS.NAME}
-                                label={translate('common.name')}
-                                subtitle={translate('workspace.reportFields.nameInputSubtitle')}
-                                description={translate('common.name')}
-                                rightLabel={translate('common.required')}
-                                accessibilityLabel={translate('workspace.editor.nameInputLabel')}
-                                maxLength={CONST.WORKSPACE_REPORT_FIELD_POLICY_MAX_LENGTH}
-                                multiline={false}
-                                role={CONST.ROLE.PRESENTATION}
-                            />
-                            <InputWrapper
-                                InputComponent={TypeSelector}
-                                inputID={INPUT_IDS.TYPE}
-                                label={translate('common.type')}
-                                subtitle={translate('workspace.reportFields.typeInputSubtitle')}
-                                rightLabel={translate('common.required')}
-                                onTypeSelected={(type) => formRef.current?.resetForm({...inputValues, type, initialValue: type === CONST.REPORT_FIELD_TYPES.DATE ? defaultDate : ''})}
-                            />
-
-                            {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.TEXT && (
+                <ScrollView contentContainerStyle={styles.flexGrow1}>
+                    <FormProvider
+                        ref={formRef}
+                        style={[styles.mh5, styles.flex1]}
+                        formID={ONYXKEYS.FORMS.WORKSPACE_REPORT_FIELDS_FORM}
+                        onSubmit={submitForm}
+                        validate={validateForm}
+                        submitButtonText={translate('common.save')}
+                        enabledWhenOffline
+                        shouldValidateOnBlur={false}
+                        disablePressOnEnter={false}
+                    >
+                        {({inputValues}) => (
+                            <View style={styles.mhn5}>
                                 <InputWrapper
                                     InputComponent={TextPicker}
-                                    inputID={INPUT_IDS.INITIAL_VALUE}
-                                    label={translate('common.initialValue')}
-                                    subtitle={translate('workspace.reportFields.initialValueInputSubtitle')}
-                                    description={translate('common.initialValue')}
-                                    accessibilityLabel={translate('workspace.editor.initialValueInputLabel')}
+                                    inputID={INPUT_IDS.NAME}
+                                    label={translate('common.name')}
+                                    subtitle={translate('workspace.reportFields.nameInputSubtitle')}
+                                    description={translate('common.name')}
+                                    rightLabel={translate('common.required')}
+                                    accessibilityLabel={translate('workspace.editor.nameInputLabel')}
                                     maxLength={CONST.WORKSPACE_REPORT_FIELD_POLICY_MAX_LENGTH}
                                     multiline={false}
                                     role={CONST.ROLE.PRESENTATION}
                                 />
-                            )}
-
-                            {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.DATE && (
-                                <MenuItemWithTopDescription
-                                    title={translate('common.currentDate')}
-                                    description={translate('common.date')}
-                                    rightLabel={translate('common.required')}
-                                    interactive={false}
-                                />
-                            )}
-
-
-                            {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && (
-                                <MenuItemWithTopDescription
-                                    description={translate('workspace.reportFields.listValues')}
-                                    shouldShowRightIcon
-                                    titleStyle={{...styles.flex1, ...styles.preWrap, ...styles.breakAll}}
-                                    title={(formDraft?.[INPUT_IDS.LIST_VALUES] ?? []).join(', ')}
-                                    onPress={() => Navigation.navigate(ROUTES.WORKSPACE_REPORT_FIELDS_LIST_VALUES.getRoute(policyID))}
-                                />
-                            )}
-
-                            {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && availableListValuesLength > 0 && (
                                 <InputWrapper
-                                    InputComponent={InitialListValueSelector}
-                                    inputID={INPUT_IDS.INITIAL_VALUE}
-                                    label={translate('common.initialValue')}
-                                    subtitle={translate('workspace.reportFields.listValuesInputSubtitle')}
+                                    InputComponent={TypeSelector}
+                                    inputID={INPUT_IDS.TYPE}
+                                    label={translate('common.type')}
+                                    subtitle={translate('workspace.reportFields.typeInputSubtitle')}
                                     rightLabel={translate('common.required')}
+                                    onTypeSelected={(type) => formRef.current?.resetForm({...inputValues, type, initialValue: type === CONST.REPORT_FIELD_TYPES.DATE ? defaultDate : ''})}
                                 />
-                            )}
-                        </View>
-                    )}
-                </FormProvider>
+
+                                {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.TEXT && (
+                                    <InputWrapper
+                                        InputComponent={TextPicker}
+                                        inputID={INPUT_IDS.INITIAL_VALUE}
+                                        label={translate('common.initialValue')}
+                                        subtitle={translate('workspace.reportFields.initialValueInputSubtitle')}
+                                        description={translate('common.initialValue')}
+                                        accessibilityLabel={translate('workspace.editor.initialValueInputLabel')}
+                                        maxLength={CONST.WORKSPACE_REPORT_FIELD_POLICY_MAX_LENGTH}
+                                        multiline={false}
+                                        role={CONST.ROLE.PRESENTATION}
+                                    />
+                                )}
+
+                                {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.DATE && (
+                                    <MenuItemWithTopDescription
+                                        title={translate('common.currentDate')}
+                                        description={translate('common.date')}
+                                        rightLabel={translate('common.required')}
+                                        interactive={false}
+                                    />
+                                )}
+
+
+                                {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && (
+                                    <MenuItemWithTopDescription
+                                        description={translate('workspace.reportFields.listValues')}
+                                        shouldShowRightIcon
+                                        titleStyle={{...styles.flex1, ...styles.preWrap, ...styles.breakAll}}
+                                        title={(formDraft?.[INPUT_IDS.LIST_VALUES] ?? []).join(', ')}
+                                        onPress={() => Navigation.navigate(ROUTES.WORKSPACE_REPORT_FIELDS_LIST_VALUES.getRoute(policyID))}
+                                    />
+                                )}
+
+                                {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && availableListValuesLength > 0 && (
+                                    <InputWrapper
+                                        InputComponent={InitialListValueSelector}
+                                        inputID={INPUT_IDS.INITIAL_VALUE}
+                                        label={translate('common.initialValue')}
+                                        subtitle={translate('workspace.reportFields.listValuesInputSubtitle')}
+                                        rightLabel={translate('common.required')}
+                                    />
+                                )}
+                            </View>
+                        )}
+                    </FormProvider>
+                </ScrollView>
             </ScreenWrapper>
         </AccessOrNotFoundWrapper>
     );
