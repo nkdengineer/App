@@ -167,6 +167,17 @@ function CreateReportFieldsPage({
                                 />
                             )}
 
+
+                            {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && (
+                                <MenuItemWithTopDescription
+                                    description={translate('workspace.reportFields.listValues')}
+                                    shouldShowRightIcon
+                                    titleStyle={{...styles.flex1, ...styles.preWrap}}
+                                    title={(formDraft?.[INPUT_IDS.LIST_VALUES] ?? []).join(', ')}
+                                    onPress={() => Navigation.navigate(ROUTES.WORKSPACE_REPORT_FIELDS_LIST_VALUES.getRoute(policyID))}
+                                />
+                            )}
+
                             {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && availableListValuesLength > 0 && (
                                 <InputWrapper
                                     InputComponent={InitialListValueSelector}
@@ -174,14 +185,6 @@ function CreateReportFieldsPage({
                                     label={translate('common.initialValue')}
                                     subtitle={translate('workspace.reportFields.listValuesInputSubtitle')}
                                     rightLabel={translate('common.required')}
-                                />
-                            )}
-
-                            {inputValues[INPUT_IDS.TYPE] === CONST.REPORT_FIELD_TYPES.LIST && (
-                                <MenuItemWithTopDescription
-                                    description={translate('workspace.reportFields.listValues')}
-                                    shouldShowRightIcon
-                                    onPress={() => Navigation.navigate(ROUTES.WORKSPACE_REPORT_FIELDS_LIST_VALUES.getRoute(policyID))}
                                 />
                             )}
                         </View>
