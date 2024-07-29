@@ -83,6 +83,7 @@ type ContextMenuActionPayload = {
     event?: GestureResponderEvent | MouseEvent | KeyboardEvent;
     setIsEmojiPickerActive?: (state: boolean) => void;
     anchorRef?: MutableRefObject<View | null>;
+    isComposerFocused?: boolean;
 };
 
 type OnPress = (closePopover: boolean, payload: ContextMenuActionPayload, selection?: string, reportID?: string, draftMessage?: string) => void;
@@ -451,13 +452,18 @@ const ContextMenuActions: ContextMenuAction[] = [
             const isAttachmentTarget = menuTarget?.current && 'tagName' in menuTarget.current && menuTarget?.current.tagName === 'IMG' && isAttachment;
             return type === CONST.CONTEXT_MENU_TYPES.REPORT_ACTION && !isAttachmentTarget && !ReportActionsUtils.isMessageDeleted(reportAction);
         },
-        onPress: (closePopover, {reportAction, reportID}) => {
+        onPress: (closePopover, {reportAction, reportID, isComposerFocused}) => {
             const originalReportID = ReportUtils.getOriginalReportID(reportID, reportAction);
             Environment.getEnvironmentURL().then((environmentURL) => {
                 const reportActionID = reportAction?.reportActionID;
                 Clipboard.setString(`${environmentURL}/r/${originalReportID}/${reportActionID}`);
             });
-            hideContextMenu(true, ReportActionComposeFocusManager.focus);
+            hideContextMenu(true, () => {
+                if (!isComposerFocused) {
+                    return;
+                }
+                ReportActionComposeFocusManager.focus(true);
+            });
         },
         getDescription: () => {},
     },

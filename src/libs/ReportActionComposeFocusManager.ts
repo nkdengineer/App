@@ -14,6 +14,7 @@ const editComposerRef = React.createRef<TextInput>();
 // The general composer callback will take priority if it exists.
 let focusCallback: FocusCallback | null = null;
 let mainComposerFocusCallback: FocusCallback | null = null;
+let composerBluredTime: number | null = null;
 
 /**
  * Register a callback to be called when focus is requested.
@@ -51,6 +52,14 @@ function focus(shouldFocusForNonBlurInputOnTapOutside?: boolean) {
     focusCallback();
 }
 
+function blur() {
+    composerBluredTime = new Date().getTime();
+}
+
+function isJustBlured(time: number) {
+    return time - (composerBluredTime ?? 0) <= 100;
+}
+
 /**
  * Clear the registered focus callback
  */
@@ -84,4 +93,6 @@ export default {
     isFocused,
     editComposerRef,
     isEditFocused,
+    blur,
+    isJustBlured,
 };

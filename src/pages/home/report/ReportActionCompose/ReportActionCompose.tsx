@@ -44,6 +44,7 @@ import AttachmentPickerWithMenuItems from './AttachmentPickerWithMenuItems';
 import ComposerWithSuggestions from './ComposerWithSuggestions';
 import type {ComposerWithSuggestionsProps} from './ComposerWithSuggestions/ComposerWithSuggestions';
 import SendButton from './SendButton';
+import ReportActionComposeFocusManager from '@libs/ReportActionComposeFocusManager';
 
 type ComposerRef = {
     blur: () => void;
@@ -307,6 +308,7 @@ function ReportActionCompose({
 
     const onBlur = useCallback(
         (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
+            ReportActionComposeFocusManager.blur();
             const webEvent = event as unknown as FocusEvent;
             setIsFocused(false);
             onComposerBlur?.();

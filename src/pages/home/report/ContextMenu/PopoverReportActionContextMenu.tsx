@@ -37,6 +37,7 @@ function PopoverReportActionContextMenu(_props: unknown, ref: ForwardedRef<Repor
     const reportActionRef = useRef<NonNullable<OnyxEntry<ReportAction>> | null>(null);
     const reportActionIDRef = useRef('-1');
     const originalReportIDRef = useRef('-1');
+    const isComposerFocusedRef = useRef(false);
     const selectionRef = useRef('');
     const reportActionDraftMessageRef = useRef<string>();
 
@@ -171,6 +172,7 @@ function PopoverReportActionContextMenu(_props: unknown, ref: ForwardedRef<Repor
         shouldCloseOnTarget = false,
         setIsEmojiPickerActive = () => {},
         isOverflowMenu = false,
+        isComposerFocused = false,
     ) => {
         const {pageX = 0, pageY = 0} = extractPointerEvent(event);
         contextMenuAnchorRef.current = contextMenuAnchor;
@@ -212,6 +214,7 @@ function PopoverReportActionContextMenu(_props: unknown, ref: ForwardedRef<Repor
             reportIDRef.current = reportID ?? '-1';
             reportActionIDRef.current = reportActionID ?? '-1';
             originalReportIDRef.current = originalReportID ?? '-1';
+            isComposerFocusedRef.current = isComposerFocused;
             selectionRef.current = selection;
             setIsPopoverVisible(true);
             reportActionDraftMessageRef.current = draftMessage;
@@ -347,6 +350,7 @@ function PopoverReportActionContextMenu(_props: unknown, ref: ForwardedRef<Repor
                     anchor={contextMenuTargetNode}
                     contentRef={contentRef}
                     originalReportID={originalReportIDRef.current}
+                    isComposerFocused={isComposerFocusedRef.current}
                     disabledActions={disabledActions}
                     setIsEmojiPickerActive={onEmojiPickerToggle.current}
                 />

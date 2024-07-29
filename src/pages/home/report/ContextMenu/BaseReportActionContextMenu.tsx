@@ -94,6 +94,8 @@ type BaseReportActionContextMenuProps = BaseReportActionContextMenuOnyxProps & {
 
     /** Function to update emoji picker state */
     setIsEmojiPickerActive?: (state: boolean) => void;
+
+    isComposerFocused?: boolean;
 };
 
 type MenuItemRefs = Record<string, ContextMenuItemHandle | null>;
@@ -118,6 +120,7 @@ function BaseReportActionContextMenu({
     checkIfContextMenuActive,
     disabledActions = [],
     setIsEmojiPickerActive,
+    isComposerFocused = false
 }: BaseReportActionContextMenuProps) {
     const StyleUtils = useStyleUtils();
     const {translate} = useLocalize();
@@ -252,6 +255,7 @@ function BaseReportActionContextMenu({
                             interceptAnonymousUser,
                             openOverflowMenu,
                             setIsEmojiPickerActive,
+                            isComposerFocused,
                         };
 
                         if ('renderContent' in contextAction) {
