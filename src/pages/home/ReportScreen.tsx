@@ -13,6 +13,7 @@ import DragAndDropProvider from '@components/DragAndDrop/Provider';
 import MoneyReportHeader from '@components/MoneyReportHeader';
 import MoneyRequestHeader from '@components/MoneyRequestHeader';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
+import ProgressBar from '@components/ProgressBar';
 import ReportActionsSkeletonView from '@components/ReportActionsSkeletonView';
 import ScreenWrapper from '@components/ScreenWrapper';
 import TaskHeaderActionButton from '@components/TaskHeaderActionButton';
@@ -125,6 +126,7 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
         selector: (parentReportActions) => getParentReportAction(parentReportActions, reportOnyx?.parentReportActionID ?? ''),
     });
     const [isLoadingApp] = useOnyx(ONYXKEYS.IS_LOADING_APP);
+    const [isLoadingReportData] = useOnyx(ONYXKEYS.IS_LOADING_REPORT_DATA);
     const wasLoadingApp = usePrevious(isLoadingApp);
     const finishedLoadingApp = wasLoadingApp && !isLoadingApp;
     const isDeletedParentAction = ReportActionsUtils.isDeletedParentAction(parentReportAction);
@@ -753,6 +755,7 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
                             needsOffscreenAlphaCompositing
                         >
                             {headerView}
+                            {!shouldUseNarrowLayout && <ProgressBar shouldShow={isLoadingReportData ?? false} />}
                             {ReportUtils.isTaskReport(report) && shouldUseNarrowLayout && ReportUtils.isOpenTaskReport(report, parentReportAction) && (
                                 <View style={[styles.borderBottom]}>
                                     <View style={[styles.appBG, styles.pl0]}>

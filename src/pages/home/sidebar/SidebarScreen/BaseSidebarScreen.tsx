@@ -14,6 +14,8 @@ import SidebarLinksData from '@pages/home/sidebar/SidebarLinksData';
 import Timing from '@userActions/Timing';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
+import useResponsiveLayout from '@hooks/useResponsiveLayout';
+import ProgressBar from '@components/ProgressBar';
 
 /**
  * Function called when a pinned chat is selected.
@@ -28,6 +30,8 @@ function BaseSidebarScreen() {
     const activeWorkspaceID = useActiveWorkspaceFromNavigationState();
     const {translate} = useLocalize();
     const [activeWorkspace] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY}${activeWorkspaceID ?? -1}`);
+    const [isLoadingReportData] = useOnyx(ONYXKEYS.IS_LOADING_REPORT_DATA);
+    const {shouldUseNarrowLayout} = useResponsiveLayout();
 
     useEffect(() => {
         Performance.markStart(CONST.TIMING.SIDEBAR_LOADED);
@@ -57,6 +61,7 @@ function BaseSidebarScreen() {
                         breadcrumbLabel={translate('common.inbox')}
                         activeWorkspaceID={activeWorkspaceID}
                     />
+                    {shouldUseNarrowLayout && <ProgressBar shouldShow={isLoadingReportData ?? false}/>}
                     <View style={[styles.flex1]}>
                         <SidebarLinksData
                             onLinkClick={startTimer}
