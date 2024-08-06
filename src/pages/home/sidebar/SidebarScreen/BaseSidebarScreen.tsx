@@ -1,9 +1,11 @@
 import React, {useEffect} from 'react';
 import {View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
+import ProgressBar from '@components/ProgressBar';
 import ScreenWrapper from '@components/ScreenWrapper';
 import useActiveWorkspaceFromNavigationState from '@hooks/useActiveWorkspaceFromNavigationState';
 import useLocalize from '@hooks/useLocalize';
+import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {updateLastAccessedWorkspace} from '@libs/actions/Policy/Policy';
 import * as Browser from '@libs/Browser';
@@ -14,8 +16,6 @@ import SidebarLinksData from '@pages/home/sidebar/SidebarLinksData';
 import Timing from '@userActions/Timing';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
-import useResponsiveLayout from '@hooks/useResponsiveLayout';
-import ProgressBar from '@components/ProgressBar';
 
 /**
  * Function called when a pinned chat is selected.
@@ -61,7 +61,7 @@ function BaseSidebarScreen() {
                         breadcrumbLabel={translate('common.inbox')}
                         activeWorkspaceID={activeWorkspaceID}
                     />
-                    {shouldUseNarrowLayout && <ProgressBar shouldShow={isLoadingReportData ?? false}/>}
+                    {shouldUseNarrowLayout && isLoadingReportData && <ProgressBar />}
                     <View style={[styles.flex1]}>
                         <SidebarLinksData
                             onLinkClick={startTimer}

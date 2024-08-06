@@ -1,71 +1,31 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {View} from 'react-native';
-import Animated, {Easing, useAnimatedStyle, useSharedValue, withTiming} from 'react-native-reanimated';
+import Animated, {Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming} from 'react-native-reanimated';
 
-type ProgressBarProps = {
-    shouldShow: boolean;
-};
-
-function ProgressBar({shouldShow}: ProgressBarProps) {
-    const [isProgressing, setIsProgressing] = useState(false);
-    const progressValue = useSharedValue(0);
-    const [progress, setProgress] = useState(0);
-
-    useEffect(() => {
-        if (!shouldShow) {
-            return;
-        }
-
-        setIsProgressing(true);
-        setProgress(0);
-    }, [shouldShow, setIsProgressing, setProgress]);
-
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-
-        if (shouldShow) {
-            setProgress(0);
-            // eslint-disable-next-line react-compiler/react-compiler
-            progressValue.value = 0;
-            interval = setInterval(() => {
-                setProgress((prev) => {
-                    const nextProgress = prev + 10;
-                    if (nextProgress >= 100) {
-                        clearInterval(interval);
-                        return 100;
-                    }
-                    return nextProgress;
-                });
-            }, 300);
-        } else if (progress < 100) {
-            progressValue.value = withTiming(100, {duration: 1000, easing: Easing.linear}, () => {
-                setIsProgressing(false);
-            });
-            setProgress(100);
-        }
-
-        return () => {
-            if (!interval) {
-                return;
-            }
-            clearInterval(interval);
-        };
-    }, [shouldShow]);
+function ProgressBar() {
+    const left = useSharedValue(0);
+    const width = useSharedValue(0);
 
     useEffect(() => {
         // eslint-disable-next-line react-compiler/react-compiler
-        progressValue.value = withTiming(progress, {duration: 300});
-    }, [progress, progressValue]);
+        left.value = withRepeat(
+            withSequence(withTiming(0, {duration: 0}), withTiming(0, {duration: 1000, easing: Easing.linear}), withTiming(100, {duration: 1000, easing: Easing.linear})),
+            -1,
+            false,
+        );
+        width.value = withRepeat(
+            withSequence(withTiming(0, {duration: 0}), withTiming(100, {duration: 1000, easing: Easing.linear}), withTiming(0, {duration: 1000, easing: Easing.linear})),
+            -1,
+            false,
+        );
+    }, []);
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
-            width: `${progressValue.value}%`,
+            left: `${left.value}%`,
+            width: `${width.value}%`,
         };
     });
-
-    if (!shouldShow && !isProgressing) {
-        return null;
-    }
 
     return (
         <View
@@ -77,7 +37,7 @@ function ProgressBar({shouldShow}: ProgressBarProps) {
                 overflow: 'hidden',
             }}
         >
-            <Animated.View style={[{height: '100%', backgroundColor: '#03D47C', borderRadius: 5}, animatedStyle]} />
+            <Animated.View style={[{height: '100%', backgroundColor: '#03D47C', borderRadius: 5, width: '100%'}, animatedStyle]} />
         </View>
     );
 }
