@@ -363,7 +363,7 @@ function ReportActionItem({
                 false,
                 setIsEmojiPickerActive as () => void,
                 false,
-                ReportActionComposeFocusManager.isJustBlured(new Date().getTime()),
+                ReportActionComposeFocusManager.isJustBlured(new Date().getTime()) || ReportActionComposeFocusManager.isFocused(),
             );
         },
         [draftMessage, action, report.reportID, toggleContextMenuFromActiveReportAction, originalReportID, shouldDisplayContextMenu, disabledActions, isArchivedRoom, isChronosReport],
