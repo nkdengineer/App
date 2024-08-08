@@ -15,6 +15,7 @@ type OnboardingData = Onboarding | [] | undefined;
 
 let isLoadingReportData = true;
 let tryNewDotData: TryNewDot | undefined;
+let onboarding: OnboardingData | undefined;
 
 type HasCompletedOnboardingFlowProps = {
     onCompleted?: () => void;
@@ -46,7 +47,7 @@ function onServerDataReady(): Promise<void> {
 }
 
 function isOnboardingFlowCompleted({onCompleted, onNotCompleted}: HasCompletedOnboardingFlowProps) {
-    isOnboardingFlowStatusKnownPromise.then((onboarding) => {
+    isOnboardingFlowStatusKnownPromise.then(() => {
         if (Array.isArray(onboarding) || onboarding?.hasCompletedGuidedSetupFlow === undefined) {
             return;
         }
@@ -174,10 +175,8 @@ Onyx.connect({
         if (value === undefined) {
             return;
         }
-        resolveOnboardingFlowStatus(value);
-        isOnboardingFlowStatusKnownPromise = new Promise<OnboardingData>((resolve) => {
-            resolveOnboardingFlowStatus = resolve;
-        });
+        onboarding = value;
+        resolveOnboardingFlowStatus();
     },
 });
 
