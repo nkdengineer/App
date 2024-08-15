@@ -23,7 +23,7 @@ import type {
     PolicyCategories,
     PolicyCategory,
     PolicyTag,
-    PolicyTagList,
+    PolicyTagLists,
     PolicyTags,
     Report,
     ReportAction,
@@ -49,7 +49,6 @@ import * as LoginUtils from './LoginUtils';
 import ModifiedExpenseMessage from './ModifiedExpenseMessage';
 import Navigation from './Navigation/Navigation';
 import Performance from './Performance';
-import Permissions from './Permissions';
 import * as PersonalDetailsUtils from './PersonalDetailsUtils';
 import * as PhoneNumber from './PhoneNumber';
 import * as PolicyUtils from './PolicyUtils';
@@ -186,7 +185,6 @@ type GetUserToInviteConfig = {
     excludeUnknownUsers?: boolean;
     optionsToExclude?: Array<Partial<ReportUtils.OptionData>>;
     selectedOptions?: Array<Partial<ReportUtils.OptionData>>;
-    betas: OnyxEntry<Beta[]>;
     reportActions?: ReportActions;
     showChatPreviewLine?: boolean;
 };
@@ -220,10 +218,10 @@ type Options = {
 
 type PreviewConfig = {showChatPreviewLine?: boolean; forcePolicyNamePreview?: boolean; showPersonalDetails?: boolean};
 
-type FilterOptionsConfig = Pick<
-    GetOptionsConfig,
-    'sortByReportTypeInSearch' | 'canInviteUser' | 'betas' | 'selectedOptions' | 'excludeUnknownUsers' | 'excludeLogins' | 'maxRecentReportsToShow'
-> & {preferChatroomsOverThreads?: boolean; includeChatRoomsByParticipants?: boolean};
+type FilterOptionsConfig = Pick<GetOptionsConfig, 'sortByReportTypeInSearch' | 'canInviteUser' | 'selectedOptions' | 'excludeUnknownUsers' | 'excludeLogins' | 'maxRecentReportsToShow'> & {
+    preferChatroomsOverThreads?: boolean;
+    includeChatRoomsByParticipants?: boolean;
+};
 
 type HasText = {
     text?: string;
@@ -658,6 +656,10 @@ function getLastMessageTextForReport(report: OnyxEntry<Report>, lastActorDetails
                 });
                 break;
             }
+            case CONST.REPORT.ARCHIVE_REASON.BOOKING_END_DATE_HAS_PASSED: {
+                lastMessageTextFromReport = Localize.translate(preferredLocale, `reportArchiveReasons.${archiveReason}`);
+                break;
+            }
             default: {
                 lastMessageTextFromReport = Localize.translate(preferredLocale, `reportArchiveReasons.default`);
             }
@@ -796,6 +798,7 @@ function createOption(
         result.isWaitingOnBankAccount = report.isWaitingOnBankAccount;
         result.policyID = report.policyID;
         result.isSelfDM = ReportUtils.isSelfDM(report);
+        result.notificationPreference = report.notificationPreference;
 
         const visibleParticipantAccountIDs = ReportUtils.getParticipantsAccountIDsForDisplay(report, true);
 
@@ -1353,7 +1356,7 @@ function getTagListSections(
 /**
  * Verifies that there is at least one enabled tag
  */
-function hasEnabledTags(policyTagList: Array<PolicyTagList[keyof PolicyTagList]>) {
+function hasEnabledTags(policyTagList: Array<PolicyTagLists[keyof PolicyTagLists]>) {
     const policyTagValueList = policyTagList.map(({tags}) => Object.values(tags)).flat();
 
     return hasEnabledOptions(policyTagValueList);
@@ -1723,10 +1726,7 @@ function getUserToInviteOption({
 /**
  * Check whether report has violations
  */
-function shouldShowViolations(report: Report, betas: OnyxEntry<Beta[]>, transactionViolations: OnyxCollection<TransactionViolation[]>) {
-    if (!Permissions.canUseViolations(betas)) {
-        return false;
-    }
+function shouldShowViolations(report: Report, transactionViolations: OnyxCollection<TransactionViolation[]>) {
     const {parentReportID, parentReportActionID} = report ?? {};
     const canGetParentReport = parentReportID && parentReportActionID && allReportActions;
     if (!canGetParentReport) {
@@ -1849,7 +1849,7 @@ function getOptions(
     // Filter out all the reports that shouldn't be displayed
     const filteredReportOptions = options.reports.filter((option) => {
         const report = option.item;
-        const doesReportHaveViolations = shouldShowViolations(report, betas, transactionViolations);
+        const doesReportHaveViolations = shouldShowViolations(report, transactionViolations);
 
         return ReportUtils.shouldReportBeInOptionList({
             report,
@@ -1984,6 +1984,8 @@ function getOptions(
 
             const shouldShowInvoiceRoom =
                 includeInvoiceRooms && ReportUtils.isInvoiceRoom(reportOption.item) && ReportUtils.isPolicyAdmin(reportOption.policyID ?? '', policies) && !reportOption.isArchivedRoom;
+            // TODO: Uncomment the following line when the invoices screen is ready - https://github.com/Expensify/App/issues/45175.
+            // && PolicyUtils.canSendInvoiceFromWorkspace(reportOption.policyID);
 
             /**
                 Exclude the report option if it doesn't meet any of the following conditions:
@@ -2050,7 +2052,6 @@ function getOptions(
             excludeUnknownUsers,
             optionsToExclude,
             selectedOptions,
-            betas,
             reportActions,
             showChatPreviewLine,
         });
@@ -2418,7 +2419,6 @@ function filterOptions(options: Options, searchInputValue: string, config?: Filt
     const {
         sortByReportTypeInSearch = false,
         canInviteUser = true,
-        betas = [],
         maxRecentReportsToShow = 0,
         excludeLogins = [],
         preferChatroomsOverThreads = false,
@@ -2523,7 +2523,6 @@ function filterOptions(options: Options, searchInputValue: string, config?: Filt
         if (recentReports.length === 0 && personalDetails.length === 0) {
             userToInvite = getUserToInviteOption({
                 searchValue,
-                betas,
                 selectedOptions: config?.selectedOptions,
                 optionsToExclude,
             });
@@ -2547,6 +2546,22 @@ function filterOptions(options: Options, searchInputValue: string, config?: Filt
 
 function sortItemsAlphabetically<T extends HasText>(membersList: T[]): T[] {
     return membersList.sort((a, b) => (a.text ?? '').toLowerCase().localeCompare((b.text ?? '').toLowerCase()));
+}
+
+function getEmptyOptions(): Options {
+    return {
+        recentReports: [],
+        personalDetails: [],
+        userToInvite: null,
+        currentUserOption: null,
+        categoryOptions: [],
+        tagOptions: [],
+        taxRatesOptions: [],
+    };
+}
+
+function shouldUseBoldText(report: ReportUtils.OptionData): boolean {
+    return report.isUnread === true && report.notificationPreference !== CONST.REPORT.NOTIFICATION_PREFERENCE.MUTE;
 }
 
 export {
@@ -2592,6 +2607,8 @@ export {
     shouldShowViolations,
     getPersonalDetailSearchTerms,
     getCurrentUserSearchTerms,
+    getEmptyOptions,
+    shouldUseBoldText,
 };
 
 export type {MemberForList, CategorySection, CategoryTreeSection, Options, OptionList, SearchOption, PayeePersonalDetails, Category, Tax, TaxRatesOption, Option, OptionTree};
