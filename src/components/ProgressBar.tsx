@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import {View} from 'react-native';
-import Animated, {Easing, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming} from 'react-native-reanimated';
+import Animated, {Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming} from 'react-native-reanimated';
 
 function ProgressBar() {
     const left = useSharedValue(0);
@@ -8,15 +8,30 @@ function ProgressBar() {
 
     useEffect(() => {
         // eslint-disable-next-line react-compiler/react-compiler
-        left.value = withRepeat(
-            withSequence(withTiming(0, {duration: 0}), withTiming(0, {duration: 1000, easing: Easing.linear}), withTiming(100, {duration: 1000, easing: Easing.linear})),
-            -1,
-            false,
+        left.value = withDelay(
+            300, // 0.3s delay
+            withRepeat(
+                withSequence(
+                    withTiming(0, {duration: 0}),
+                    withTiming(0, {duration: 750, easing: Easing.bezier(0.65, 0, 0.35, 1)}),
+                    withTiming(100, {duration: 750, easing: Easing.bezier(0.65, 0, 0.35, 1)}),
+                ),
+                -1,
+                false,
+            ),
         );
-        width.value = withRepeat(
-            withSequence(withTiming(0, {duration: 0}), withTiming(100, {duration: 1000, easing: Easing.linear}), withTiming(0, {duration: 1000, easing: Easing.linear})),
-            -1,
-            false,
+
+        width.value = withDelay(
+            300, // 0.3s delay
+            withRepeat(
+                withSequence(
+                    withTiming(0, {duration: 0}),
+                    withTiming(100, {duration: 750, easing: Easing.bezier(0.65, 0, 0.35, 1)}),
+                    withTiming(0, {duration: 750, easing: Easing.bezier(0.65, 0, 0.35, 1)}),
+                ),
+                -1,
+                false,
+            ),
         );
     }, []);
 
