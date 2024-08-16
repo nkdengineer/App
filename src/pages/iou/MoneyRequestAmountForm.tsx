@@ -67,6 +67,8 @@ type MoneyRequestAmountFormProps = {
 
     /** Whether the user input should be kept or not */
     shouldKeepUserInput?: boolean;
+
+    onPasteAmountWithCurrency?: (currency: string) => void;
 };
 
 const isAmountInvalid = (amount: string) => !amount.length || parseFloat(amount) < 0.01;
@@ -92,6 +94,7 @@ function MoneyRequestAmountForm(
         onSubmitButtonPress,
         selectedTab = CONST.TAB_REQUEST.MANUAL,
         shouldKeepUserInput = false,
+        onPasteAmountWithCurrency,
     }: MoneyRequestAmountFormProps,
     forwardedRef: ForwardedRef<BaseTextInputRef>,
 ) {
@@ -260,6 +263,7 @@ function MoneyRequestAmountForm(
                 <MoneyRequestAmountInput
                     amount={amount}
                     currency={currency}
+                    onPasteAmountWithCurrency={onPasteAmountWithCurrency}
                     isCurrencyPressable={isCurrencyPressable}
                     onCurrencyButtonPress={onCurrencyButtonPress}
                     onAmountChange={() => {

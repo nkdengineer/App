@@ -302,6 +302,13 @@ function IOURequestStepAmount({
         navigateBack();
     };
 
+    const updatePastedCurrency = useCallback(
+        (updateCurrency: string) => {
+            IOU.setMoneyRequestCurrency(transactionID, updateCurrency, action === CONST.IOU.ACTION.EDIT);
+        },
+        [transactionID, action],
+    );
+
     return (
         <StepScreenWrapper
             headerTitle={translate('iou.amount')}
@@ -312,6 +319,7 @@ function IOURequestStepAmount({
         >
             <MoneyRequestAmountForm
                 isEditing={!!backTo || isEditing}
+                onPasteAmountWithCurrency={updatePastedCurrency}
                 currency={currency}
                 amount={Math.abs(transactionAmount)}
                 skipConfirmation={shouldSkipConfirmation ?? false}

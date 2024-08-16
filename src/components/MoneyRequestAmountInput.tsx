@@ -91,6 +91,8 @@ type MoneyRequestAmountInputProps = {
 
     /** The width of inner content */
     contentWidth?: number;
+
+    onPasteAmountWithCurrency?: (currency: string) => void;
 };
 
 type Selection = {
@@ -127,6 +129,7 @@ function MoneyRequestAmountInput(
         shouldKeepUserInput = false,
         autoGrow = true,
         contentWidth,
+        onPasteAmountWithCurrency = undefined,
         ...props
     }: MoneyRequestAmountInputProps,
     forwardedRef: ForwardedRef<BaseTextInputRef>,
@@ -158,14 +161,29 @@ function MoneyRequestAmountInput(
             // Remove spaces from the newAmount value because Safari on iOS adds spaces when pasting a copied value
             // More info: https://github.com/Expensify/App/issues/16974
             const newAmountWithoutSpaces = MoneyRequestUtils.stripSpacesFromAmount(newAmount);
-            const finalAmount = newAmountWithoutSpaces.includes('.')
-                ? MoneyRequestUtils.stripCommaFromAmount(newAmountWithoutSpaces)
-                : MoneyRequestUtils.replaceCommasWithPeriod(newAmountWithoutSpaces);
-            // Use a shallow copy of selection to trigger setSelection
-            // More info: https://github.com/Expensify/App/issues/16385
-            if (!MoneyRequestUtils.validateAmount(finalAmount, decimals)) {
-                setSelection((prevSelection) => ({...prevSelection}));
-                return;
+            let finalAmount: string;
+            const exactAmountWithCurrency = MoneyRequestUtils.validateAmountWithCurrency(newAmount);
+            if (exactAmountWithCurrency) {
+                const {currency: updateCurrency, amount: updateAmount} = exactAmountWithCurrency;
+                const updateDecimals = CurrencyUtils.getCurrencyDecimals(updateCurrency);
+                finalAmount = updateAmount.includes('.') ? MoneyRequestUtils.stripCommaFromAmount(updateAmount) : MoneyRequestUtils.replaceCommasWithPeriod(updateAmount);
+                // Use a shallow copy of selection to trigger setSelection
+                // More info: https://github.com/Expensify/App/issues/16385
+                if (!MoneyRequestUtils.validateAmount(finalAmount, updateDecimals)) {
+                    setSelection((prevSelection) => ({...prevSelection}));
+                    return;
+                }
+                onPasteAmountWithCurrency?.(updateCurrency);
+            } else {
+                finalAmount = newAmountWithoutSpaces.includes('.')
+                    ? MoneyRequestUtils.stripCommaFromAmount(newAmountWithoutSpaces)
+                    : MoneyRequestUtils.replaceCommasWithPeriod(newAmountWithoutSpaces);
+                // Use a shallow copy of selection to trigger setSelection
+                // More info: https://github.com/Expensify/App/issues/16385
+                if (!MoneyRequestUtils.validateAmount(finalAmount, decimals)) {
+                    setSelection((prevSelection) => ({...prevSelection}));
+                    return;
+                }
             }
 
             // setCurrentAmount contains another setState(setSelection) making it error-prone since it is leading to setSelection being called twice for a single setCurrentAmount call. This solution introducing the hasSelectionBeenSet flag was chosen for its simplicity and lower risk of future errors https://github.com/Expensify/App/issues/23300#issuecomment-1766314724.
@@ -184,7 +202,7 @@ function MoneyRequestAmountInput(
                 return strippedAmount;
             });
         },
-        [decimals, onAmountChange],
+        [decimals, onAmountChange, onPasteAmountWithCurrency],
     );
 
     useImperativeHandle(moneyRequestAmountInputRef, () => ({
