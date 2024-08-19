@@ -21,6 +21,7 @@ type MoneyRequestAmountInputRef = {
     changeAmount: (newAmount: string) => void;
     getAmount: () => string;
     getSelection: () => Selection;
+    getCurrency: () => string;
 };
 
 type MoneyRequestAmountInputProps = {
@@ -129,7 +130,7 @@ function MoneyRequestAmountInput(
         shouldKeepUserInput = false,
         autoGrow = true,
         contentWidth,
-        onPasteAmountWithCurrency = undefined,
+        // onPasteAmountWithCurrency = undefined,
         ...props
     }: MoneyRequestAmountInputProps,
     forwardedRef: ForwardedRef<BaseTextInputRef>,
@@ -222,6 +223,9 @@ function MoneyRequestAmountInput(
         },
         getSelection() {
             return selection;
+        },
+        getCurrency() {
+            return currentCurrency;
         },
     }));
 

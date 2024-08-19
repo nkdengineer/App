@@ -219,17 +219,18 @@ function MoneyRequestAmountForm(
 
             // Skip the check for tax amount form as 0 is a valid input
             const currentAmount = moneyRequestAmountInput.current?.getAmount() ?? '';
+            const currentCurrency = moneyRequestAmountInput.current?.getCurrency() ?? CONST.CURRENCY.USD;
             if (!currentAmount.length || (!isTaxAmountForm && isAmountInvalid(currentAmount))) {
                 setFormError(translate('iou.error.invalidAmount'));
                 return;
             }
 
-            if (isTaxAmountInvalid(currentAmount, taxAmount, isTaxAmountForm, currency)) {
+            if (isTaxAmountInvalid(currentAmount, taxAmount, isTaxAmountForm, currentCurrency)) {
                 setFormError(translate('iou.error.invalidTaxAmount', {amount: formattedTaxAmount}));
                 return;
             }
 
-            onSubmitButtonPress({amount: currentAmount, currency, paymentMethod: iouPaymentType});
+            onSubmitButtonPress({amount: currentAmount, currency: currentCurrency, paymentMethod: iouPaymentType});
         },
         [taxAmount, onSubmitButtonPress, currency, translate, formattedTaxAmount],
     );
