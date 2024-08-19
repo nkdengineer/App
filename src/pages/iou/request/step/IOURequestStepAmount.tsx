@@ -132,9 +132,17 @@ function IOURequestStepAmount({
         Navigation.goBack(backTo);
     };
 
-    const navigateToCurrencySelectionPage = () => {
+    const navigateToCurrencySelectionPage = (updateCurrency: string) => {
         Navigation.navigate(
-            ROUTES.MONEY_REQUEST_STEP_CURRENCY.getRoute(action, iouType, transactionID, reportID, backTo ? 'confirm' : '', currency, Navigation.getActiveRouteWithoutParams()),
+            ROUTES.MONEY_REQUEST_STEP_CURRENCY.getRoute(
+                action,
+                iouType,
+                transactionID,
+                reportID,
+                backTo ? 'confirm' : '',
+                updateCurrency ?? currency,
+                Navigation.getActiveRouteWithoutParams(),
+            ),
         );
     };
 
@@ -319,7 +327,7 @@ function IOURequestStepAmount({
         >
             <MoneyRequestAmountForm
                 isEditing={!!backTo || isEditing}
-                onPasteAmountWithCurrency={updatePastedCurrency}
+                // onPasteAmountWithCurrency={updatePastedCurrency}
                 currency={currency}
                 amount={Math.abs(transactionAmount)}
                 skipConfirmation={shouldSkipConfirmation ?? false}

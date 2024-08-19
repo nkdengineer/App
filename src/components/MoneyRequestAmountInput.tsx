@@ -37,7 +37,7 @@ type MoneyRequestAmountInputProps = {
     isCurrencyPressable?: boolean;
 
     /** Fired when back button pressed, navigates to currency selection page */
-    onCurrencyButtonPress?: () => void;
+    onCurrencyButtonPress?: (updateCurrency?: string) => void;
 
     /** Function to call when the amount changes */
     onAmountChange?: (amount: string) => void;
@@ -92,7 +92,7 @@ type MoneyRequestAmountInputProps = {
     /** The width of inner content */
     contentWidth?: number;
 
-    onPasteAmountWithCurrency?: (currency: string) => void;
+    // onPasteAmountWithCurrency?: (currency: string) => void;
 };
 
 type Selection = {
@@ -142,6 +142,7 @@ function MoneyRequestAmountInput(
     const selectedAmountAsString = amount ? onFormatAmount(amount, currency) : '';
 
     const [currentAmount, setCurrentAmount] = useState(selectedAmountAsString);
+    const [currentCurrency, setCurrentCurrency] = useState(currency);
 
     const [selection, setSelection] = useState({
         start: selectedAmountAsString.length,
@@ -173,7 +174,8 @@ function MoneyRequestAmountInput(
                     setSelection((prevSelection) => ({...prevSelection}));
                     return;
                 }
-                onPasteAmountWithCurrency?.(updateCurrency);
+                setCurrentCurrency(updateCurrency);
+                // onPasteAmountWithCurrency?.(updateCurrency);
             } else {
                 finalAmount = newAmountWithoutSpaces.includes('.')
                     ? MoneyRequestUtils.stripCommaFromAmount(newAmountWithoutSpaces)
@@ -202,7 +204,7 @@ function MoneyRequestAmountInput(
                 return strippedAmount;
             });
         },
-        [decimals, onAmountChange, onPasteAmountWithCurrency],
+        [decimals, onAmountChange],
     );
 
     useImperativeHandle(moneyRequestAmountInputRef, () => ({
@@ -242,6 +244,10 @@ function MoneyRequestAmountInput(
         // we want to re-initialize the state only when the amount changes
         // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps
     }, [amount, shouldKeepUserInput]);
+
+    useEffect(() => {
+        setCurrentCurrency(currency);
+    }, [currency]);
 
     // Modifies the amount to match the decimals for changed currency.
     useEffect(() => {
@@ -307,7 +313,9 @@ function MoneyRequestAmountInput(
             disableKeyboard={disableKeyboard}
             formattedAmount={formattedAmount}
             onChangeAmount={setNewAmount}
-            onCurrencyButtonPress={onCurrencyButtonPress}
+            onCurrencyButtonPress={() => {
+                onCurrencyButtonPress?.(currentCurrency);
+            }}
             onBlur={formatAmount}
             placeholder={numberFormat(0)}
             ref={(ref) => {
@@ -320,7 +328,7 @@ function MoneyRequestAmountInput(
                 // eslint-disable-next-line react-compiler/react-compiler
                 textInput.current = ref;
             }}
-            selectedCurrencyCode={currency}
+            selectedCurrencyCode={currentCurrency}
             selection={selection}
             onSelectionChange={(e: NativeSyntheticEvent<TextInputSelectionChangeEventData>) => {
                 if (shouldIgnoreSelectionWhenUpdatedManually && willSelectionBeUpdatedManually.current) {

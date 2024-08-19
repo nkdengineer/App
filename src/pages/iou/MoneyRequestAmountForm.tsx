@@ -57,7 +57,7 @@ type MoneyRequestAmountFormProps = {
     isCurrencyPressable?: boolean;
 
     /** Fired when back button pressed, navigates to currency selection page */
-    onCurrencyButtonPress?: () => void;
+    onCurrencyButtonPress?: (updateCurrency?: string) => void;
 
     /** Fired when submit button pressed, saves the given amount and navigates to the next page */
     onSubmitButtonPress: (currentMoney: CurrentMoney) => void;
@@ -68,7 +68,7 @@ type MoneyRequestAmountFormProps = {
     /** Whether the user input should be kept or not */
     shouldKeepUserInput?: boolean;
 
-    onPasteAmountWithCurrency?: (currency: string) => void;
+    // onPasteAmountWithCurrency?: (currency: string) => void;
 };
 
 const isAmountInvalid = (amount: string) => !amount.length || parseFloat(amount) < 0.01;
@@ -263,7 +263,7 @@ function MoneyRequestAmountForm(
                 <MoneyRequestAmountInput
                     amount={amount}
                     currency={currency}
-                    onPasteAmountWithCurrency={onPasteAmountWithCurrency}
+                    // onPasteAmountWithCurrency={onPasteAmountWithCurrency}
                     isCurrencyPressable={isCurrencyPressable}
                     onCurrencyButtonPress={onCurrencyButtonPress}
                     onAmountChange={() => {
