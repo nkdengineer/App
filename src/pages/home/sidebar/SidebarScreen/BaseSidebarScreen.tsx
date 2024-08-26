@@ -61,7 +61,7 @@ function BaseSidebarScreen() {
                         breadcrumbLabel={translate('common.inbox')}
                         activeWorkspaceID={activeWorkspaceID}
                     />
-                    {shouldUseNarrowLayout && <ProgressBar shouldShow={isLoadingReportData ?? false} />}
+                    <ProgressBar shouldShow={isLoadingReportData ?? false} />
                     <View style={[styles.flex1]}>
                         <SidebarLinksData
                             onLinkClick={startTimer}
