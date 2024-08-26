@@ -47,6 +47,8 @@ function BaseSidebarScreen() {
         updateLastAccessedWorkspace(undefined);
     }, [activeWorkspace, activeWorkspaceID]);
 
+    console.log(isLoadingReportData);
+
     return (
         <ScreenWrapper
             includeSafeAreaPaddingBottom={false}

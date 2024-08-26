@@ -1,14 +1,18 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View} from 'react-native';
-import Animated, {cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming} from 'react-native-reanimated';
+import Animated, {cancelAnimation, Easing, runOnJS, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming} from 'react-native-reanimated';
 
 function ProgressBar({shouldShow}: {shouldShow: boolean}) {
     const left = useSharedValue(0);
     const width = useSharedValue(0);
+    const isVisible = useSharedValue(false);
+
+    console.log(shouldShow);
 
     useEffect(() => {
         if (shouldShow) {
             // eslint-disable-next-line react-compiler/react-compiler
+            isVisible.value = true;
             left.value = withDelay(
                 300, // 0.3s delay
                 withRepeat(
@@ -34,11 +38,29 @@ function ProgressBar({shouldShow}: {shouldShow: boolean}) {
                     false,
                 ),
             );
-        } else {
-            cancelAnimation(left);
-            cancelAnimation(width);
-            left.value = 0;
-            width.value = 0;
+        } else if (isVisible.value) {
+            left.value = withTiming(0, {
+                duration: 750,
+                easing: Easing.bezier(0.65, 0, 0.35, 1),
+            });
+
+            width.value = withTiming(
+                100,
+                {
+                    duration: 750,
+                    easing: Easing.bezier(0.65, 0, 0.35, 1),
+                },
+                () => {
+                    // After reaching full width, hide the loading bar
+                    runOnJS(() => {
+                        isVisible.value = false;
+                    });
+                    cancelAnimation(left);
+                    cancelAnimation(width);
+                    left.value = 0;
+                    width.value = 0;
+                },
+            );
         }
     }, [shouldShow]);
 
@@ -59,7 +81,7 @@ function ProgressBar({shouldShow}: {shouldShow: boolean}) {
                 overflow: 'hidden',
             }}
         >
-            <Animated.View style={[{height: '100%', backgroundColor: shouldShow ? '#03D47C' : 'transparent', borderRadius: 5, width: '100%'}, animatedStyle]} />
+            <Animated.View style={[{height: '100%', backgroundColor: isVisible ? '#03D47C' : 'transparent', borderRadius: 5, width: '100%'}, animatedStyle]} />
         </View>
     );
 }
