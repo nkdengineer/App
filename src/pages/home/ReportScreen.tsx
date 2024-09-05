@@ -211,6 +211,7 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
             avatarUrl: reportOnyx?.avatarUrl,
             permissions,
             invoiceReceiver: reportOnyx?.invoiceReceiver,
+            policyAvatar: reportOnyx?.policyAvatar,
         }),
         [
             reportOnyx?.lastReadTime,
@@ -253,6 +254,7 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
             reportOnyx?.avatarUrl,
             permissions,
             reportOnyx?.invoiceReceiver,
+            reportOnyx?.policyAvatar,
         ],
     );
 
@@ -524,10 +526,9 @@ function ReportScreen({route, currentReportID = '', navigation}: ReportScreenPro
 
     useEffect(() => {
         // Call OpenReport only if we are not linking to a message or the report is not available yet
-        if (isLoadingReportOnyx || (reportActionIDFromRoute && report.reportID && isLinkedMessagePageReady)) {
+        if (isLoadingReportOnyx || reportActionIDFromRoute) {
             return;
         }
-
         fetchReportIfNeeded();
         // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps
     }, [isLoadingReportOnyx]);
