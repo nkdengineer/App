@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo} from 'react';
+import React, {useCallback, useEffect, useMemo} from 'react';
 import {View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import type {OnyxEntry} from 'react-native-onyx';
@@ -317,6 +317,13 @@ function MoneyRequestView({report, shouldShowAnimatedBackground, readonly = fals
         },
         [transactionAmount, isSettled, isCancelled, isPolicyExpenseChat, isEmptyMerchant, transactionDate, readonly, hasErrors, hasViolations, translate, getViolationsForField],
     );
+
+    useEffect(() => {
+        console.log("LOGMOUNT");
+        return () => {
+            console.log("LOGUNMOUNT");
+        }
+    }, [])
 
     const distanceRequestFields = canUseP2PDistanceRequests ? (
         <>
