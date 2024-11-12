@@ -11,7 +11,7 @@ import * as ReportUtils from '@libs/ReportUtils';
 import * as ReportActions from '@userActions/Report';
 import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
-import type SCREENS from '@src/SCREENS';
+import SCREENS from '@src/SCREENS';
 import type {Report} from '@src/types/onyx';
 
 type WithWritableReportOrNotFoundOnyxProps = {
@@ -41,7 +41,8 @@ type MoneyRequestRouteName =
     | typeof SCREENS.MONEY_REQUEST.STEP_SCAN
     | typeof SCREENS.MONEY_REQUEST.STEP_SEND_FROM
     | typeof SCREENS.MONEY_REQUEST.STEP_COMPANY_INFO
-    | typeof SCREENS.MONEY_REQUEST.STEP_ATTENDEES;
+    | typeof SCREENS.MONEY_REQUEST.STEP_ATTENDEES
+    | typeof SCREENS.MONEY_REQUEST.STEP_UPGRADE;
 
 type Route<T extends MoneyRequestRouteName> = RouteProp<MoneyRequestNavigatorParamList, T>;
 
