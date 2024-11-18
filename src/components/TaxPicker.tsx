@@ -1,33 +1,21 @@
 import React, {useCallback, useMemo, useState} from 'react';
-import {withOnyx} from 'react-native-onyx';
-import type {OnyxEntry} from 'react-native-onyx';
+import {useOnyx} from 'react-native-onyx';
 import type {EdgeInsets} from 'react-native-safe-area-context';
 import type {ValueOf} from 'type-fest';
 import useLocalize from '@hooks/useLocalize';
 import useStyleUtils from '@hooks/useStyleUtils';
 import * as IOUUtils from '@libs/IOUUtils';
 import * as OptionsListUtils from '@libs/OptionsListUtils';
+import * as PolicyUtils from '@libs/PolicyUtils';
 import * as TransactionUtils from '@libs/TransactionUtils';
 import CONST from '@src/CONST';
 import type {IOUAction} from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
-import type {Policy, Transaction} from '@src/types/onyx';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import SelectionList from './SelectionList';
 import RadioListItem from './SelectionList/RadioListItem';
 
-type TaxPickerOnyxProps = {
-    /** The policy which the user has access to and which the report is tied to */
-    policy: OnyxEntry<Policy>;
-
-    /** All the data for the transaction */
-    transaction: OnyxEntry<Transaction>;
-
-    /** The draft transaction that holds data to be persisted on the current split transaction */
-    splitDraftTransaction: OnyxEntry<Transaction>;
-};
-
-type TaxPickerProps = TaxPickerOnyxProps & {
+type TaxPickerProps = {
     /** The selected tax rate of an expense */
     selectedTaxRate?: string;
 
@@ -58,10 +46,16 @@ type TaxPickerProps = TaxPickerOnyxProps & {
     onDismiss: () => void;
 };
 
-function TaxPicker({selectedTaxRate = '', policy, transaction, insets, onSubmit, action, splitDraftTransaction, iouType, onDismiss}: TaxPickerProps) {
+function TaxPicker({selectedTaxRate = '', policyID, transactionID, insets, onSubmit, action, iouType, onDismiss}: TaxPickerProps) {
     const StyleUtils = useStyleUtils();
     const {translate} = useLocalize();
     const [searchValue, setSearchValue] = useState('');
+    const policy = PolicyUtils.getPolicy(policyID);
+    const [draftTransaction] = useOnyx(`${ONYXKEYS.COLLECTION.TRANSACTION_DRAFT}${transactionID}` as `${typeof ONYXKEYS.COLLECTION.TRANSACTION}${string}`);
+    const [defaultTransaction] = useOnyx(`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`);
+    const [splitDraftTransaction] = useOnyx(`${ONYXKEYS.COLLECTION.SPLIT_TRANSACTION_DRAFT}${transactionID}`);
+
+    const transaction = IOUUtils.shouldUseTransactionDraft(action) ? draftTransaction : defaultTransaction;
 
     const isEditing = action === CONST.IOU.ACTION.EDIT;
     const isEditingSplitBill = isEditing && iouType === CONST.IOU.TYPE.SPLIT;
@@ -69,7 +63,7 @@ function TaxPicker({selectedTaxRate = '', policy, transaction, insets, onSubmit,
 
     const taxRates = policy?.taxRates;
     const taxRatesCount = TransactionUtils.getEnabledTaxRateCount(taxRates?.taxes ?? {});
-    const isTaxRatesCountBelowThreshold = taxRatesCount < CONST.TAX_RATES_LIST_THRESHOLD;
+    const isTaxRatesCountBelowThreshold = taxRatesCount < CONST.STANDARD_LIST_ITEM_LIMIT;
 
     const shouldShowTextInput = !isTaxRatesCountBelowThreshold;
 
@@ -92,9 +86,9 @@ function TaxPicker({selectedTaxRate = '', policy, transaction, insets, onSubmit,
         [searchValue, selectedOptions, policy, currentTransaction],
     );
 
-    const headerMessage = OptionsListUtils.getHeaderMessageForNonUserList(sections[0].data.length > 0, searchValue);
+    const headerMessage = OptionsListUtils.getHeaderMessageForNonUserList((sections.at(0)?.data?.length ?? 0) > 0, searchValue);
 
-    const selectedOptionKey = useMemo(() => sections?.[0]?.data?.find((taxRate) => taxRate.searchText === selectedTaxRate)?.keyForList, [sections, selectedTaxRate]);
+    const selectedOptionKey = useMemo(() => sections?.at(0)?.data?.find((taxRate) => taxRate.searchText === selectedTaxRate)?.keyForList, [sections, selectedTaxRate]);
 
     const handleSelectRow = useCallback(
         (newSelectedOption: OptionsListUtils.TaxRatesOption) => {
@@ -125,19 +119,4 @@ function TaxPicker({selectedTaxRate = '', policy, transaction, insets, onSubmit,
 
 TaxPicker.displayName = 'TaxPicker';
 
-export default withOnyx<TaxPickerProps, TaxPickerOnyxProps>({
-    policy: {
-        key: ({policyID}) => `${ONYXKEYS.COLLECTION.POLICY}${policyID}`,
-    },
-    transaction: {
-        key: ({transactionID, action}) => {
-            if (action === CONST.IOU.ACTION.CREATE || IOUUtils.isMovingTransactionFromTrackExpense(action)) {
-                return `${ONYXKEYS.COLLECTION.TRANSACTION_DRAFT}${transactionID}` as `${typeof ONYXKEYS.COLLECTION.TRANSACTION}${string}`;
-            }
-            return `${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`;
-        },
-    },
-    splitDraftTransaction: {
-        key: ({transactionID}) => `${ONYXKEYS.COLLECTION.SPLIT_TRANSACTION_DRAFT}${transactionID}`,
-    },
-})(TaxPicker);
+export default TaxPicker;

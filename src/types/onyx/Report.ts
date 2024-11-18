@@ -3,7 +3,6 @@ import type CONST from '@src/CONST';
 import type ONYXKEYS from '@src/ONYXKEYS';
 import type CollectionDataSet from '@src/types/utils/CollectionDataSet';
 import type * as OnyxCommon from './OnyxCommon';
-import type PersonalDetails from './PersonalDetails';
 import type {PolicyReportField} from './Policy';
 
 /** Preference that defines how regular the chat notifications are sent to the user */
@@ -39,7 +38,7 @@ type PendingChatMember = {
 /** Report participant properties */
 type Participant = OnyxCommon.OnyxValueWithOfflineFeedback<{
     /** Whether the participant is visible in the report */
-    hidden?: boolean;
+    notificationPreference: NotificationPreference;
 
     /** What is the role of the participant in the report */
     role?: 'admin' | 'member';
@@ -71,6 +70,9 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** The URL of the Group Chat report custom avatar */
         avatarUrl?: string;
 
+        /** The filename of the avatar */
+        avatarFileName?: string;
+
         /** The specific type of chat */
         chatType?: ValueOf<typeof CONST.REPORT.CHAT_TYPE>;
 
@@ -79,9 +81,6 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
 
         /** Whether the report has a child task that is awaiting action from the current user */
         hasOutstandingChildTask?: boolean;
-
-        /** List of icons for report participants */
-        icons?: OnyxCommon.Icon[];
 
         /** Whether the user is not an admin of policyExpenseChat chat */
         isOwnPolicyExpenseChat?: boolean;
@@ -95,14 +94,8 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** The text of the last message on the report */
         lastMessageText?: string;
 
-        /** The timestamp of the last message on the report */
-        lastMessageTimestamp?: number;
-
         /** The time of the last message on the report */
         lastVisibleActionCreated?: string;
-
-        /** The time of the last read of the report */
-        lastReadCreated?: string;
 
         /** The time when user read the last message */
         lastReadTime?: string;
@@ -113,8 +106,8 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** The time of the last mention of the report */
         lastMentionedTime?: string | null;
 
-        /** The current user's notification preference for this report */
-        notificationPreference?: NotificationPreference;
+        /** The policy avatar to use, if any */
+        policyAvatar?: string | null;
 
         /** The policy name to use */
         policyName?: string | null;
@@ -158,9 +151,6 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** The report type */
         type?: string;
 
-        /** If the admin room should be opened */
-        openOnAdminRoom?: boolean;
-
         /** The report visibility */
         visibility?: RoomVisibility;
 
@@ -203,9 +193,6 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** Account ID of the report owner */
         ownerAccountID?: number;
 
-        /** E-mail of the report owner */
-        ownerEmail?: string;
-
         /** Collection of report participants, indexed by their accountID */
         participants?: Participants;
 
@@ -230,14 +217,8 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** Whether the report is cancelled */
         isCancelledIOU?: boolean;
 
-        /** Whether the last message was deleted */
-        isLastMessageDeletedParentAction?: boolean;
-
         /** The ID of the IOU report */
         iouReportID?: string;
-
-        /** Total amount of money owed for IOU report */
-        iouReportAmount?: number;
 
         /** The ID of the preexisting report (it is possible that we optimistically created a Report for which a report already exists) */
         preexistingReportID?: string;
@@ -248,23 +229,11 @@ type Report = OnyxCommon.OnyxValueWithOfflineFeedback<
         /** Whether the report is hidden from options list */
         isHidden?: boolean;
 
-        /** Whether the report is a chat room */
-        isChatRoom?: boolean;
-
-        /** Collection of participants personal details */
-        participantsList?: PersonalDetails[];
-
-        /** Text to be displayed in options list, which matches reportName by default */
-        text?: string;
-
         /** Collection of participant private notes, indexed by their accountID */
         privateNotes?: Record<number, Note>;
 
         /** Whether participants private notes are being currently loaded */
         isLoadingPrivateNotes?: boolean;
-
-        /** Whether the report is currently selected in the options list */
-        selected?: boolean;
 
         /** Pending members of the report */
         pendingChatMembers?: PendingChatMember[];
