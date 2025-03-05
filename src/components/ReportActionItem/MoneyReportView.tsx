@@ -18,7 +18,10 @@ import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {convertToDisplayString} from '@libs/CurrencyUtils';
 import Navigation from '@libs/Navigation/Navigation';
+import {getOriginalMessage, isMoneyRequestAction} from '@libs/ReportActionsUtils';
 import {
+    canEditMoneyRequest,
+    canUserPerformWriteAction as canUserPerformWriteActionReportUtils,
     getAvailableReportFields,
     getFieldViolation,
     getFieldViolationTranslation,
@@ -34,6 +37,7 @@ import {
 } from '@libs/ReportUtils';
 import AnimatedEmptyStateBackground from '@pages/home/report/AnimatedEmptyStateBackground';
 import variables from '@styles/variables';
+import CONST from '@src/CONST';
 import {clearReportFieldKeyErrors} from '@src/libs/actions/Report';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
@@ -57,9 +61,11 @@ type MoneyReportViewProps = {
     shouldHideThreadDividerLine: boolean;
 
     pendingAction?: PendingAction;
+
+    transactionThreadReport?: OnyxEntry<Report>;
 };
 
-function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTotal = true, shouldHideThreadDividerLine, pendingAction}: MoneyReportViewProps) {
+function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTotal = true, shouldHideThreadDividerLine, pendingAction, transactionThreadReport}: MoneyReportViewProps) {
     const theme = useTheme();
     const styles = useThemeStyles();
     const StyleUtils = useStyleUtils();
@@ -67,6 +73,26 @@ function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTo
     const {isOffline} = useNetwork();
     const isSettled = isSettledReportUtils(report?.reportID);
     const isTotalUpdated = hasUpdatedTotal(report, policy);
+    const parentReportID = transactionThreadReport?.parentReportID;
+    const [parentReportActions] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${parentReportID ?? CONST.DEFAULT_NUMBER_ID}`, {
+        canEvict: false,
+    });
+
+    const parentReportAction = transactionThreadReport?.parentReportActionID ? parentReportActions?.[transactionThreadReport.parentReportActionID] : undefined;
+
+    const linkedTransactionID = useMemo(() => {
+        if (!parentReportAction) {
+            return undefined;
+        }
+        const originalMessage = parentReportAction && isMoneyRequestAction(parentReportAction) ? getOriginalMessage(parentReportAction) : undefined;
+        return originalMessage?.IOUTransactionID;
+    }, [parentReportAction]);
+
+    const [transaction] = useOnyx(`${ONYXKEYS.COLLECTION.TRANSACTION}${linkedTransactionID ?? CONST.DEFAULT_NUMBER_ID}`);
+
+    const canUserPerformWriteAction = !!canUserPerformWriteActionReportUtils(transactionThreadReport);
+    const isAdmin = policy?.role === CONST.POLICY.ROLE.ADMIN;
+    const canEdit = isMoneyRequestAction(parentReportAction) && canEditMoneyRequest(parentReportAction, transaction) && canUserPerformWriteAction && isAdmin;
 
     const {totalDisplaySpend, nonReimbursableSpend, reimbursableSpend} = getMoneyRequestSpendBreakdown(report);
 
@@ -151,12 +177,12 @@ function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTo
                                                     ROUTES.EDIT_REPORT_FIELD_REQUEST.getRoute(report?.reportID, report?.policyID, reportField.fieldID, Navigation.getReportRHPActiveRoute()),
                                                 );
                                             }}
-                                            shouldShowRightIcon
+                                            shouldShowRightIcon={canEdit}
                                             disabled={isFieldDisabled}
                                             wrapperStyle={[styles.pv2, styles.taskDescriptionMenuItem]}
                                             shouldGreyOutWhenDisabled={false}
                                             numberOfLinesTitle={0}
-                                            interactive
+                                            interactive={canEdit}
                                             shouldStackHorizontally={false}
                                             onSecondaryInteraction={() => {}}
                                             titleWithTooltips={[]}

@@ -156,6 +156,7 @@ function ReportActionItemContentCreated({contextValue, parentReportAction, trans
                             policy={policy}
                             isCombinedReport
                             pendingAction={action?.pendingAction}
+                            transactionThreadReport={transactionThreadReport}
                             shouldShowTotal={transaction ? transactionCurrency !== report?.currency : false}
                             shouldHideThreadDividerLine={shouldHideThreadDividerLine}
                         />
