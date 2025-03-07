@@ -92,7 +92,7 @@ function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTo
 
     const canUserPerformWriteAction = !!canUserPerformWriteActionReportUtils(transactionThreadReport);
     const isAdmin = policy?.role === CONST.POLICY.ROLE.ADMIN;
-    const canEdit = isMoneyRequestAction(parentReportAction) && canEditMoneyRequest(parentReportAction, transaction) && canUserPerformWriteAction && isAdmin;
+    const canEdit = (isMoneyRequestAction(parentReportAction) && canEditMoneyRequest(parentReportAction, transaction) && canUserPerformWriteAction) || isAdmin;
 
     const {totalDisplaySpend, nonReimbursableSpend, reimbursableSpend} = getMoneyRequestSpendBreakdown(report);
 
