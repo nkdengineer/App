@@ -77,9 +77,13 @@ function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTo
     const [parentReportActions] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${parentReportID ?? CONST.DEFAULT_NUMBER_ID}`, {
         canEvict: false,
     });
+    const [reportActions] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report?.reportID ?? CONST.DEFAULT_NUMBER_ID}`, {
+        canEvict: false,
+    });
 
-    const parentReportAction = transactionThreadReport?.parentReportActionID ? parentReportActions?.[transactionThreadReport.parentReportActionID] : undefined;
-
+    const parentReportAction = transactionThreadReport?.parentReportActionID
+        ? parentReportActions?.[transactionThreadReport.parentReportActionID]
+        : Object.values(reportActions ?? {}).find((action) => action.actionName === CONST.REPORT.ACTIONS.TYPE.IOU);
     const linkedTransactionID = useMemo(() => {
         if (!parentReportAction) {
             return undefined;
@@ -89,8 +93,7 @@ function MoneyReportView({report, policy, isCombinedReport = false, shouldShowTo
     }, [parentReportAction]);
 
     const [transaction] = useOnyx(`${ONYXKEYS.COLLECTION.TRANSACTION}${linkedTransactionID ?? CONST.DEFAULT_NUMBER_ID}`);
-
-    const canUserPerformWriteAction = !!canUserPerformWriteActionReportUtils(transactionThreadReport);
+    const canUserPerformWriteAction = !!canUserPerformWriteActionReportUtils(transactionThreadReport ?? report);
     const isAdmin = policy?.role === CONST.POLICY.ROLE.ADMIN;
     const canEdit = (isMoneyRequestAction(parentReportAction) && canEditMoneyRequest(parentReportAction, transaction) && canUserPerformWriteAction) || isAdmin;
 
