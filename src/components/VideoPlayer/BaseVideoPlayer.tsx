@@ -111,13 +111,13 @@ function BaseVideoPlayer({
         setIsEnded(false);
         videoResumeTryNumberRef.current = 0;
         if (!isCurrentlyURLSet) {
-            updateCurrentlyPlayingURL(url);
+            updateCurrentlyPlayingURL(url, reportID);
         } else if (isPlaying) {
             pauseVideo();
         } else {
             playVideo();
         }
-    }, [isCurrentlyURLSet, isPlaying, pauseVideo, playVideo, updateCurrentlyPlayingURL, url, videoResumeTryNumberRef]);
+    }, [isCurrentlyURLSet, isPlaying, pauseVideo, playVideo, reportID, updateCurrentlyPlayingURL, url, videoResumeTryNumberRef]);
 
     const hideControl = useCallback(() => {
         if (isEnded) {
@@ -415,8 +415,8 @@ function BaseVideoPlayer({
         if (!shouldPlay) {
             return;
         }
-        updateCurrentlyPlayingURL(url);
-    }, [shouldPlay, updateCurrentlyPlayingURL, url]);
+        updateCurrentlyPlayingURL(url, reportID);
+    }, [reportID, shouldPlay, updateCurrentlyPlayingURL, url]);
 
     useEffect(() => {
         videoPlayerRef.current?.setStatusAsync({isMuted: true});
@@ -527,6 +527,9 @@ function BaseVideoPlayer({
                                     togglePlayCurrentVideo={togglePlayCurrentVideo}
                                     controlsStatus={controlStatusState}
                                     showPopoverMenu={showPopoverMenu}
+                                    onEnterFullScreenMode={() => {
+                                        updateCurrentlyPlayingURL(url, reportID);
+                                    }}
                                 />
                             )}
                         </View>

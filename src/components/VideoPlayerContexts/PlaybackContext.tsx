@@ -24,6 +24,7 @@ function PlaybackContextProvider({children}: ChildrenProps) {
     const playVideoPromiseRef = useRef<Promise<AVPlaybackStatus>>();
     const isPlayPendingRef = useRef(false);
 
+    console.log(currentlyPlayingURLReportID)
     const pauseVideo = useCallback(() => {
         currentVideoPlayerRef.current?.setStatusAsync?.({shouldPlay: false});
     }, [currentVideoPlayerRef]);
@@ -69,11 +70,11 @@ function PlaybackContextProvider({children}: ChildrenProps) {
     );
 
     const updateCurrentlyPlayingURL = useCallback(
-        (url: string | null) => {
+        (url: string | null, reportID: string | undefined = undefined) => {
             if (currentlyPlayingURL && url !== currentlyPlayingURL) {
                 pauseVideo();
             }
-            setCurrentlyPlayingURLReportID(currentReportID);
+            setCurrentlyPlayingURLReportID(reportID ?? currentReportID);
             setCurrentlyPlayingURL(url);
         },
         [currentlyPlayingURL, currentReportID, pauseVideo],

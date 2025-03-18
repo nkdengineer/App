@@ -59,7 +59,7 @@ function VideoPlayerPreview({videoUrl, thumbnailUrl, reportID, fileName, videoDi
     };
 
     const handleOnPress = () => {
-        updateCurrentlyPlayingURL(videoUrl);
+        updateCurrentlyPlayingURL(videoUrl, reportID);
         if (shouldUseNarrowLayout) {
             onShowModalPress();
         }
