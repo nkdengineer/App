@@ -208,6 +208,7 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
 
     const shouldDisableSubmitButton = shouldShowSubmitButton && !isAllowedToSubmitDraftExpenseReport(moneyRequestReport);
     const isFromPaidPolicy = policyType === CONST.POLICY.TYPE.TEAM || policyType === CONST.POLICY.TYPE.CORPORATE;
+
     const shouldShowStatusBar =
         hasAllPendingRTERViolations || shouldShowBrokenConnectionViolation || hasOnlyHeldExpenses || hasScanningReceipt || isPayAtEndExpense || hasOnlyPendingTransactions;
 
@@ -230,7 +231,7 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
     const bankAccountRoute = getBankAccountRoute(chatReport);
     const formattedAmount = convertToDisplayString(reimbursableSpend, moneyRequestReport?.currency);
     const {nonHeldAmount, fullAmount, hasValidNonHeldAmount} = getNonHeldAndFullAmount(moneyRequestReport, shouldShowPayButton);
-    const isAnyTransactionOnHold = hasHeldExpensesReportUtils(moneyRequestReport?.reportID);
+    const isAnyTransactionOnHold = useMemo(() => hasHeldExpensesReportUtils(moneyRequestReport?.reportID), [moneyRequestReport?.reportID, transactions]);
     const displayedAmount = isAnyTransactionOnHold && canAllowSettlement && hasValidNonHeldAmount ? nonHeldAmount : formattedAmount;
     const isMoreContentShown = shouldShowNextStep || shouldShowStatusBar || (shouldShowAnyButton && shouldUseNarrowLayout);
     const {isDelegateAccessRestricted} = useDelegateUserDetails();
@@ -239,10 +240,14 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
 
     const isReportInRHP = route.name === SCREENS.SEARCH.REPORT_RHP;
     const shouldDisplaySearchRouter = !isReportInRHP || isSmallScreenWidth;
-
+    const chatReportRef = useRef(chatReport);
+    chatReportRef.current = chatReport;
+    const moneyRepmoneyRequestReportRef = useRef(moneyRequestReport);
+    moneyRepmoneyRequestReportRef.current = moneyRequestReport;
+    
     const confirmPayment = useCallback(
         (type?: PaymentMethodType | undefined, payAsBusiness?: boolean) => {
-            if (!type || !chatReport) {
+            if (!type || !chatReportRef.current) {
                 return;
             }
             setPaymentType(type);
@@ -251,22 +256,22 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
                 setIsNoDelegateAccessMenuVisible(true);
             } else if (isAnyTransactionOnHold) {
                 setIsHoldMenuVisible(true);
-            } else if (isInvoiceReport(moneyRequestReport)) {
+            } else if (isInvoiceReport(moneyRepmoneyRequestReportRef.current)) {
                 startAnimation();
-                payInvoice(type, chatReport, moneyRequestReport, payAsBusiness);
+                payInvoice(type, chatReportRef.current, moneyRepmoneyRequestReportRef.current, payAsBusiness);
             } else {
                 startAnimation();
-                payMoneyRequest(type, chatReport, moneyRequestReport, true);
+                payMoneyRequest(type, chatReportRef.current, moneyRepmoneyRequestReportRef.current, true);
             }
         },
-        [chatReport, isAnyTransactionOnHold, isDelegateAccessRestricted, moneyRequestReport, startAnimation],
+        [isAnyTransactionOnHold, isDelegateAccessRestricted, startAnimation],
     );
 
     const confirmApproval = () => {
         setRequestType(CONST.IOU.REPORT_ACTION_TYPE.APPROVE);
         if (isDelegateAccessRestricted) {
             setIsNoDelegateAccessMenuVisible(true);
-        } else if (isAnyTransactionOnHold) {
+        } else if (isAnyTransactionOnHold || hasDuplicate) {
             setIsHoldMenuVisible(true);
         } else {
             startApprovedAnimation();
@@ -321,6 +326,7 @@ function MoneyReportHeader({policy, report: moneyRequestReport, transactionThrea
         if (hasOnlyHeldExpenses) {
             return {icon: getStatusIcon(Expensicons.Stopwatch), description: translate('iou.expensesOnHold')};
         }
+
         if (!!transaction?.transactionID && shouldShowBrokenConnectionViolation) {
             return {
                 icon: getStatusIcon(Expensicons.Hourglass),

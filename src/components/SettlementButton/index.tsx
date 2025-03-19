@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import type {GestureResponderEvent} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import ButtonWithDropdownMenu from '@components/ButtonWithDropdownMenu';
@@ -89,9 +89,11 @@ function SettlementButton({
     const isInvoiceReport = (!isEmptyObject(iouReport) && isInvoiceReportUtil(iouReport)) || false;
     const shouldShowPaywithExpensifyOption = !shouldHidePaymentOptions;
     const shouldShowPayElsewhereOption = !shouldHidePaymentOptions && !isInvoiceReport;
+    const isExpenseReport = isExpenseReportUtil(iouReport);
+    const isIndividualInvoiceRoom = isIndividualInvoiceRoomUtil(chatReport);
+
     const paymentButtonOptions = useMemo(() => {
         const buttonOptions = [];
-        const isExpenseReport = isExpenseReportUtil(iouReport);
         const paymentMethods = {
             [CONST.IOU.PAYMENT_TYPE.EXPENSIFY]: {
                 text: translate('iou.settleExpensify', {formattedAmount}),
@@ -138,7 +140,7 @@ function SettlementButton({
         }
 
         if (isInvoiceReport) {
-            if (isIndividualInvoiceRoomUtil(chatReport)) {
+            if (isIndividualInvoiceRoom) {
                 buttonOptions.push({
                     text: translate('iou.settlePersonal', {formattedAmount}),
                     icon: Expensicons.User,
@@ -185,7 +187,6 @@ function SettlementButton({
         // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps
     }, [
         isLoadingLastPaymentMethod,
-        iouReport,
         translate,
         formattedAmount,
         shouldDisableApproveButton,
@@ -195,11 +196,13 @@ function SettlementButton({
         shouldShowApproveButton,
         shouldShowPaywithExpensifyOption,
         shouldShowPayElsewhereOption,
-        chatReport,
         onPress,
         onlyShowPayElsewhere,
+        isIndividualInvoiceRoom,
+        isExpenseReport,
     ]);
 
+    console.log(paymentButtonOptions);
     const selectPaymentType = (event: KYCFlowEvent, iouPaymentType: PaymentMethodType, triggerKYCFlow: TriggerKYCFlow) => {
         if (policy && shouldRestrictUserBillableActions(policy.id)) {
             Navigation.navigate(ROUTES.RESTRICTED_ACTION.getRoute(policy.id));
