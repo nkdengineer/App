@@ -50,7 +50,9 @@ function PlaybackContextProvider({children}: ChildrenProps) {
     }, [currentVideoPlayerRef]);
 
     const unloadVideo = useCallback(() => {
-        currentVideoPlayerRef.current?.unloadAsync?.();
+        currentVideoPlayerRef.current?.unloadAsync?.().then(() => {
+            currentVideoPlayerRef.current = null;
+        });
     }, [currentVideoPlayerRef]);
 
     /**
@@ -112,7 +114,6 @@ function PlaybackContextProvider({children}: ChildrenProps) {
             setOriginalParent(null);
             setCurrentlyPlayingURLReportID(undefined);
             unloadVideo();
-            currentVideoPlayerRef.current = null;
         });
     }, [stopVideo, unloadVideo]);
 
