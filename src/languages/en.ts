@@ -2718,6 +2718,8 @@ const translations = {
             companyCards: 'Company cards',
             workflows: 'Workflows',
             workspace: 'Workspace',
+            employeeUserID: 'Custom field 1',
+            employeePayrollID: 'Custom field 2',
             edit: 'Edit workspace',
             enabled: 'Enabled',
             disabled: 'Disabled',

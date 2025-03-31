@@ -1230,6 +1230,38 @@ function clearInviteDraft(policyID: string) {
     FormActions.clearDraftValues(ONYXKEYS.FORMS.WORKSPACE_INVITE_MESSAGE_FORM);
 }
 
+function updateMemberCustomField(policyID: string, accountID: number, fieldID: 'employeeUserID' | 'employeePayrollID', value: string) {
+    const memberLogin = allPersonalDetails?.[accountID]?.login ?? '';
+    const policy = getPolicy(policyID);
+    const member = policy?.employeeList?.[memberLogin];
+
+    const optimisticData: OnyxUpdate[] = [
+        {
+            onyxMethod: Onyx.METHOD.MERGE,
+            key: `${ONYXKEYS.COLLECTION.POLICY}${policyID}`,
+            value: {employeeList: {[memberLogin]: {[fieldID]: value, pendingFields: {[fieldID]: CONST.RED_BRICK_ROAD_PENDING_ACTION.UPDATE}}}},
+        },
+    ];
+
+    const successData: OnyxUpdate[] = [
+        {
+            onyxMethod: Onyx.METHOD.MERGE,
+            key: `${ONYXKEYS.COLLECTION.POLICY}${policyID}`,
+            value: {employeeList: {[memberLogin]: {[fieldID]: value, pendingFields: {[fieldID]: null}}}},
+        },
+    ];
+
+    const failureData: OnyxUpdate[] = [
+        {
+            onyxMethod: Onyx.METHOD.MERGE,
+            key: `${ONYXKEYS.COLLECTION.POLICY}${policyID}`,
+            value: {employeeList: {[memberLogin]: {[fieldID]: member?.[fieldID], pendingFields: {[fieldID]: null}}}},
+        },
+    ];
+
+    API.write(WRITE_COMMANDS.UPDATE_WORKSPACE_MEMBERS_ROLE, {policyID, employees: JSON.stringify([{email: memberLogin, role: member?.role}])}, {optimisticData, successData, failureData});
+}
+
 export {
     removeMembers,
     updateWorkspaceMembersRole,
@@ -1249,6 +1281,7 @@ export {
     downloadMembersCSV,
     clearInviteDraft,
     openPolicyMemberProfilePage,
+    updateMemberCustomField,
 };
 
 export type {NewCustomUnit};

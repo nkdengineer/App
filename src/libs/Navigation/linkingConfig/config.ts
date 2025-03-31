@@ -701,6 +701,9 @@ const config: LinkingOptions<RootNavigatorParamList>['config'] = {
                         [SCREENS.WORKSPACE.MEMBER_DETAILS]: {
                             path: ROUTES.WORKSPACE_MEMBER_DETAILS.route,
                         },
+                        [SCREENS.WORKSPACE.MEMBER_CUSTOM_FIELD]: {
+                            path: ROUTES.WORKSPACE_MEMBER_CUSTOM_FIELD.route,
+                        },
                         [SCREENS.WORKSPACE.MEMBER_NEW_CARD]: {
                             path: ROUTES.WORKSPACE_MEMBER_NEW_CARD.route,
                         },

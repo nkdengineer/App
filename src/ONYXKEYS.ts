@@ -772,6 +772,7 @@ const ONYXKEYS = {
         DEBUG_DETAILS_FORM_DRAFT: 'debugDetailsFormDraft',
         WORKSPACE_PER_DIEM_FORM: 'workspacePerDiemForm',
         WORKSPACE_PER_DIEM_FORM_DRAFT: 'workspacePerDiemFormDraft',
+        WORKSPACE_MEMBER_CUSTOM_FIELD_FORM: 'workspaceMemberCustomFieldForm',
     },
     DERIVED: {
         CONCIERGE_CHAT_REPORT_ID: 'conciergeChatReportID',
@@ -874,6 +875,7 @@ type OnyxFormValuesMapping = {
     [ONYXKEYS.FORMS.DEBUG_DETAILS_FORM]: FormTypes.DebugReportForm | FormTypes.DebugReportActionForm | FormTypes.DebugTransactionForm | FormTypes.DebugTransactionViolationForm;
     [ONYXKEYS.FORMS.INTERNATIONAL_BANK_ACCOUNT_FORM]: FormTypes.InternationalBankAccountForm;
     [ONYXKEYS.FORMS.WORKSPACE_PER_DIEM_FORM]: FormTypes.WorkspacePerDiemForm;
+    [ONYXKEYS.FORMS.WORKSPACE_MEMBER_CUSTOM_FIELD_FORM]: FormTypes.MemberCustomFieldForm;
 };
 
 type OnyxFormDraftValuesMapping = {

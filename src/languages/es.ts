@@ -2741,6 +2741,8 @@ const translations = {
             companyCards: 'Tarjetas de empresa',
             workflows: 'Flujos de trabajo',
             workspace: 'Espacio de trabajo',
+            employeeUserID: 'Custom field 1',
+            employeePayrollID: 'Custom field 2',
             edit: 'Editar espacio de trabajo',
             enabled: 'Activada',
             disabled: 'Desactivada',

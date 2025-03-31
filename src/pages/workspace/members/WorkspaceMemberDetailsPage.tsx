@@ -342,6 +342,26 @@ function WorkspaceMemberDetailsPage({personalDetails, policy, route}: WorkspaceM
                                         shouldShowRightIcon
                                         onPress={openRoleSelectionModal}
                                     />
+                                    <OfflineWithFeedback pendingAction={member?.pendingFields?.employeeUserID}>
+                                        <MenuItemWithTopDescription
+                                            title={member.employeeUserID}
+                                            description={translate('workspace.common.employeeUserID')}
+                                        shouldShowRightIcon
+                                            onPress={() => {
+                                                Navigation.navigate(ROUTES.WORKSPACE_MEMBER_CUSTOM_FIELD.getRoute(policyID, accountID, 'employeeUserID'));
+                                            }}
+                                        />
+                                    </OfflineWithFeedback>
+                                    <OfflineWithFeedback pendingAction={member?.pendingFields?.employeePayrollID}>
+                                        <MenuItemWithTopDescription
+                                            title={member.employeePayrollID}
+                                            description={translate('workspace.common.employeePayrollID')}
+                                            shouldShowRightIcon
+                                            onPress={() => {
+                                                Navigation.navigate(ROUTES.WORKSPACE_MEMBER_CUSTOM_FIELD.getRoute(policyID, accountID, 'employeePayrollID'));
+                                            }}
+                                        />
+                                    </OfflineWithFeedback>
                                     <MenuItem
                                         style={styles.mb5}
                                         title={translate('common.profile')}

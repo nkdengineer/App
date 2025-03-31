@@ -20,6 +20,12 @@ type PolicyEmployee = OnyxCommon.OnyxValueWithOfflineFeedback<{
     /** Email of the user this user forwards all reports to when the report total is over the 'approvalLimit' */
     overLimitForwardsTo?: string;
 
+    /** */
+    employeePayrollID?: string;
+
+    /** */
+    employeeUserID?: string;
+
     /**
      * Errors from api calls on the specific user
      * {<timestamp>: 'error message', <timestamp2>: 'error message 2'}
