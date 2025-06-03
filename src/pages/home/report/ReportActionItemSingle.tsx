@@ -32,8 +32,10 @@ import {
     isIndividualInvoiceRoom,
     isInvoiceReport as isInvoiceReportUtils,
     isInvoiceRoom,
+    isIOUReport,
     isOptimisticPersonalDetail,
     isPolicyExpenseChat,
+    reportTransactionsSelector,
     isTripRoom as isTripRoomReportUtils,
 } from '@libs/ReportUtils';
 import CONST from '@src/CONST';
@@ -111,10 +113,24 @@ function ReportActionItemSingle({
     const [innerPolicies] = useOnyx(ONYXKEYS.COLLECTION.POLICY, {
         canBeMissing: true,
     });
+    const [transactions = []] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION, {
+        selector: (_transactions) => reportTransactionsSelector(_transactions, iouReport?.reportID),
+        initialValue: [],
+        canBeMissing: true,
+    });
+    const shouldShowIOUData = useMemo(() => {
+        if (!isIOUReport(iouReport) && action?.childType !== CONST.REPORT.TYPE.IOU) {
+            return false;
+        }
+    
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        return transactions.some((transaction) => (transaction?.modifiedAmount || transaction?.amount) < 0);
+    }, [transactions, action?.childType, iouReport]);
     const activePolicies = policies ?? innerPolicies;
     const policy = usePolicy(report?.policyID);
     const delegatePersonalDetails = action?.delegateAccountID ? personalDetails?.[action?.delegateAccountID] : undefined;
     const ownerAccountID = iouReport?.ownerAccountID ?? action?.childOwnerAccountID;
+    const managerAccountID = iouReport?.managerID ?? action?.childManagerAccountID;
     const isReportPreviewAction = action?.actionName === CONST.REPORT.ACTIONS.TYPE.REPORT_PREVIEW;
     const actorAccountID = getReportActionActorAccountID(action, iouReport, report, delegatePersonalDetails);
     const invoiceReceiverPolicy =
@@ -126,7 +142,7 @@ function ReportActionItemSingle({
     // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     let actorHint = (login || (displayName ?? '')).replace(CONST.REGEX.MERGED_ACCOUNT_PREFIX, '');
     const isTripRoom = isTripRoomReportUtils(report);
-    const displayAllActors = isReportPreviewAction && !isTripRoom && !isPolicyExpenseChat(report);
+    const displayAllActors = isReportPreviewAction && !isTripRoom && !isPolicyExpenseChat(report) && (!isIOUReport(iouReport) || shouldShowIOUData);
     const isInvoiceReport = isInvoiceReportUtils(iouReport ?? null);
     const isWorkspaceActor = isInvoiceReport || (isPolicyExpenseChat(report) && (!actorAccountID || displayAllActors));
 
@@ -162,7 +178,7 @@ function ReportActionItemSingle({
             };
         } else {
             // The ownerAccountID and actorAccountID can be the same if a user submits an expense back from the IOU's original creator, in that case we need to use managerID to avoid displaying the same user twice
-            const secondaryAccountId = ownerAccountID === actorAccountID || isInvoiceReport ? actorAccountID : ownerAccountID;
+            const secondaryAccountId = ownerAccountID === actorAccountID || isInvoiceReport ? managerAccountID : ownerAccountID;
             const secondaryUserAvatar = personalDetails?.[secondaryAccountId ?? -1]?.avatar ?? FallbackAvatar;
             const secondaryDisplayName = getDisplayNameForParticipant({accountID: secondaryAccountId});
 
@@ -314,18 +330,40 @@ function ReportActionItemSingle({
                             accessibilityLabel={actorHint}
                             role={CONST.ROLE.BUTTON}
                         >
-                            {personArray?.map((fragment, index) => (
-                                <ReportActionItemFragment
-                                    // eslint-disable-next-line react/no-array-index-key
-                                    key={`person-${action?.reportActionID}-${index}`}
-                                    accountID={Number(delegatePersonalDetails && !isWorkspaceActor ? actorAccountID : (icon.id ?? CONST.DEFAULT_NUMBER_ID))}
-                                    fragment={{...fragment, type: fragment.type ?? '', text: fragment.text ?? ''}}
-                                    delegateAccountID={action?.delegateAccountID}
-                                    isSingleLine
-                                    actorIcon={icon}
-                                    moderationDecision={getReportActionMessage(action)?.moderationDecision?.decision}
-                                />
-                            ))}
+                            <View style={[styles.flexRow]}>
+                                {personArray?.map((fragment, index) => (
+                                    <ReportActionItemFragment
+                                        // eslint-disable-next-line react/no-array-index-key
+                                        key={`person-${action?.reportActionID}-${index}`}
+                                        accountID={Number(delegatePersonalDetails && !isWorkspaceActor ? actorAccountID : (icon.id ?? CONST.DEFAULT_NUMBER_ID))}
+                                        fragment={{...fragment, type: fragment.type ?? '', text: fragment.text ?? ''}}
+                                        delegateAccountID={action?.delegateAccountID}
+                                        isSingleLine
+                                        actorIcon={icon}
+                                        moderationDecision={getReportActionMessage(action)?.moderationDecision?.decision}
+                                    />
+                                ))}
+                                {shouldShowIOUData && (
+                                    <>
+                                        <Text
+                                        numberOfLines={1}
+                                        style={[styles.chatItemMessageHeaderSender, styles.pre]}
+                                        >
+                                            {` & `}
+                                        </Text>
+                                        <ReportActionItemFragment
+                                            style={[styles.flex1]}
+                                            key={`person-${action?.reportActionID}-${1}`}
+                                            accountID={parseInt(`${secondaryAvatar?.id ?? -1}`, 10)}
+                                            fragment={{type: 'TEXT', text: secondaryAvatar.name ?? ''}}
+                                            delegateAccountID={action?.delegateAccountID}
+                                            isSingleLine
+                                            actorIcon={secondaryAvatar}
+                                            moderationDecision={getReportActionMessage(action)?.moderationDecision?.decision}
+                                        />
+                                    </>
+                                )}
+                            </View>
                         </PressableWithoutFeedback>
                         {!!hasEmojiStatus && (
                             <Tooltip text={statusTooltipText}>
