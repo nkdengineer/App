@@ -1370,12 +1370,12 @@ describe('ReportUtils', () => {
                     },
                 },
                 [ONYXKEYS.SESSION]: {email: currentUserEmail, accountID},
+                [ONYXKEYS.CONCIERGE_REPORT_ID]: report.reportID,
             });
             await Onyx.set(`${ONYXKEYS.COLLECTION.REPORT}${report.reportID}`, report);
 
-            // Test failure is being discussed here: https://github.com/Expensify/App/pull/63096#issuecomment-2930818443
             expect(true).toBe(true);
-            // expect(isChatUsedForOnboarding(report)).toBeTruthy();
+            expect(isChatUsedForOnboarding(report)).toBeTruthy();
         });
 
         it("should use the report id from the onboarding NVP if it's set", async () => {
