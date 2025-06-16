@@ -1,5 +1,5 @@
 import {useRoute} from '@react-navigation/native';
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {FlatList, View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import type {ValueOf} from 'type-fest';
@@ -18,7 +18,7 @@ import TopBar from '@components/Navigation/TopBar';
 import type {OfflineWithFeedbackProps} from '@components/OfflineWithFeedback';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
 import type {PopoverMenuItem} from '@components/PopoverMenu';
-import {PressableWithoutFeedback} from '@components/Pressable';
+import {PressableWithFeedback, PressableWithoutFeedback} from '@components/Pressable';
 import ScreenWrapper from '@components/ScreenWrapper';
 import ScrollView from '@components/ScrollView';
 import SearchBar from '@components/SearchBar';
@@ -56,6 +56,13 @@ import type * as OnyxCommon from '@src/types/onyx/OnyxCommon';
 import type {PolicyDetailsForNonMembers} from '@src/types/onyx/Policy';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import WorkspacesListRow from './WorkspacesListRow';
+import Checkbox from '@components/Checkbox';
+import ButtonWithDropdownMenu from '@components/ButtonWithDropdownMenu';
+import useMobileSelectionMode from '@hooks/useMobileSelectionMode';
+import HeaderWithBackButton from '@components/HeaderWithBackButton';
+import { turnOffMobileSelectionMode, turnOnMobileSelectionMode } from '@libs/actions/MobileSelectionMode';
+import MenuItem from '@components/MenuItem';
+import Modal from '@components/Modal';
 
 type WorkspaceItem = ListItem &
     Required<Pick<MenuItemProps, 'title' | 'disabled'>> &
@@ -132,6 +139,9 @@ function WorkspacesListPage() {
 
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [policyIDToDelete, setPolicyIDToDelete] = useState<string>();
+    const {selectionMode} = useMobileSelectionMode();
+    const [selectedPolicyID, setSelectedPolicyID] = useState<string>('');
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const [policyNameToDelete, setPolicyNameToDelete] = useState<string>();
     const {setIsDeletingPaidWorkspace, isLoadingBill}: {setIsDeletingPaidWorkspace: (value: boolean) => void; isLoadingBill: boolean | undefined} = usePayAndDowngrade(setIsDeleteModalOpen);
 
@@ -140,6 +150,8 @@ function WorkspacesListPage() {
     const isLessThanMediumScreen = isMediumScreenWidth || shouldUseNarrowLayout;
 
     const shouldDisplayLHB = !shouldUseNarrowLayout;
+
+    const [selectedPolicyIDs, setSelectedPolicyIDs] = useState<string[]>([]);
 
     // We need this to update translation for deleting a workspace when it has third party card feeds or expensify card assigned.
     const workspaceAccountID = policies?.[`${ONYXKEYS.COLLECTION.POLICY}${policyIDToDelete}`]?.workspaceAccountID ?? CONST.DEFAULT_NUMBER_ID;
@@ -163,162 +175,12 @@ function WorkspacesListPage() {
     const hideSupportalModal = () => {
         setIsSupportalActionRestrictedModalOpen(false);
     };
-    const confirmDeleteAndHideModal = () => {
-        if (!policyIDToDelete || !policyNameToDelete) {
-            return;
-        }
-
-        deleteWorkspace(policyIDToDelete, policyNameToDelete);
-        setIsDeleteModalOpen(false);
-    };
 
     const shouldCalculateBillNewDot: boolean = shouldCalculateBillNewDotFn();
 
     const resetLoadingSpinnerIconIndex = useCallback(() => {
         setLoadingSpinnerIconIndex(null);
     }, []);
-
-    /**
-     * Gets the menu item for each workspace
-     */
-    const getMenuItem = useCallback(
-        ({item, index}: GetMenuItem) => {
-            const isAdmin = isPolicyAdmin(item as unknown as PolicyType, session?.email);
-            const isOwner = item.ownerAccountID === session?.accountID;
-            const isDefault = activePolicyID === item.policyID;
-            // Menu options to navigate to the chat report of #admins and #announce room.
-            // For navigation, the chat report ids may be unavailable due to the missing chat reports in Onyx.
-            // In such cases, let us use the available chat report ids from the policy.
-            const threeDotsMenuItems: PopoverMenuItem[] = [
-                {
-                    icon: Expensicons.Building,
-                    text: translate('workspace.common.goToWorkspace'),
-                    onSelected: item.action,
-                },
-            ];
-
-            if (isOwner) {
-                threeDotsMenuItems.push({
-                    icon: Expensicons.Trashcan,
-                    text: translate('workspace.common.delete'),
-                    shouldShowLoadingSpinnerIcon: loadingSpinnerIconIndex === index,
-                    onSelected: () => {
-                        if (loadingSpinnerIconIndex !== null) {
-                            return;
-                        }
-
-                        if (isSupportalAction) {
-                            setIsSupportalActionRestrictedModalOpen(true);
-                            return;
-                        }
-
-                        setPolicyIDToDelete(item.policyID);
-                        setPolicyNameToDelete(item.title);
-
-                        if (shouldCalculateBillNewDot) {
-                            setIsDeletingPaidWorkspace(true);
-                            calculateBillNewDot();
-                            setLoadingSpinnerIconIndex(index);
-                            return;
-                        }
-
-                        setIsDeleteModalOpen(true);
-                    },
-                    shouldKeepModalOpen: shouldCalculateBillNewDot,
-                    shouldCallAfterModalHide: !shouldCalculateBillNewDot,
-                });
-            }
-
-            if (!(isAdmin || isOwner)) {
-                threeDotsMenuItems.push({
-                    icon: Expensicons.Exit,
-                    text: translate('common.leave'),
-                    onSelected: callFunctionIfActionIsAllowed(() => leaveWorkspace(item.policyID)),
-                });
-            }
-
-            if (isAdmin && item.adminRoom) {
-                threeDotsMenuItems.push({
-                    icon: Expensicons.Hashtag,
-                    text: translate('workspace.common.goToRoom', {roomName: CONST.REPORT.WORKSPACE_CHAT_ROOMS.ADMINS}),
-                    onSelected: () => Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(item.adminRoom ?? '')),
-                });
-            }
-
-            if (item.announceRoom) {
-                threeDotsMenuItems.push({
-                    icon: Expensicons.Hashtag,
-                    text: translate('workspace.common.goToRoom', {roomName: CONST.REPORT.WORKSPACE_CHAT_ROOMS.ANNOUNCE}),
-                    onSelected: () => Navigation.navigate(ROUTES.REPORT_WITH_ID.getRoute(item.announceRoom ?? '')),
-                });
-            }
-
-            if (!isDefault && !item?.isJoinRequestPending) {
-                threeDotsMenuItems.push({
-                    icon: Expensicons.Star,
-                    text: translate('workspace.common.setAsDefault'),
-                    onSelected: () => updateDefaultPolicy(item.policyID, activePolicyID),
-                });
-            }
-
-            return (
-                <OfflineWithFeedback
-                    key={`${item.title}_${index}`}
-                    pendingAction={item.pendingAction}
-                    errorRowStyles={styles.ph5}
-                    onClose={item.dismissError}
-                    errors={item.errors}
-                    style={styles.mb2}
-                >
-                    <PressableWithoutFeedback
-                        role={CONST.ROLE.BUTTON}
-                        accessibilityLabel="row"
-                        style={[styles.mh5]}
-                        disabled={item.disabled}
-                        onPress={item.action}
-                    >
-                        {({hovered}) => (
-                            <WorkspacesListRow
-                                title={item.title}
-                                policyID={item.policyID}
-                                menuItems={threeDotsMenuItems}
-                                workspaceIcon={item.icon}
-                                ownerAccountID={item.ownerAccountID}
-                                workspaceType={item.type}
-                                isJoinRequestPending={item?.isJoinRequestPending}
-                                rowStyles={hovered && styles.hoveredComponentBG}
-                                layoutWidth={isLessThanMediumScreen ? CONST.LAYOUT_WIDTH.NARROW : CONST.LAYOUT_WIDTH.WIDE}
-                                brickRoadIndicator={item.brickRoadIndicator}
-                                shouldDisableThreeDotsMenu={item.disabled}
-                                style={[item.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE ? styles.offlineFeedback.deleted : {}]}
-                                isDefault={isDefault}
-                                isLoadingBill={isLoadingBill}
-                                resetLoadingSpinnerIconIndex={resetLoadingSpinnerIconIndex}
-                            />
-                        )}
-                    </PressableWithoutFeedback>
-                </OfflineWithFeedback>
-            );
-        },
-        [
-            isLessThanMediumScreen,
-            styles.mb2,
-            styles.mh5,
-            styles.ph5,
-            styles.hoveredComponentBG,
-            translate,
-            styles.offlineFeedback.deleted,
-            session?.accountID,
-            session?.email,
-            activePolicyID,
-            isSupportalAction,
-            setIsDeletingPaidWorkspace,
-            isLoadingBill,
-            shouldCalculateBillNewDot,
-            loadingSpinnerIconIndex,
-            resetLoadingSpinnerIconIndex,
-        ],
-    );
 
     const policyRooms = useMemo(() => {
         if (!reports || isEmptyObject(reports)) {
@@ -363,6 +225,14 @@ function WorkspacesListPage() {
         },
         [shouldUseNarrowLayout],
     );
+
+    useEffect(() => {
+        if (isLessThanMediumScreen || !selectionMode?.isEnabled) {
+            return;
+        }
+
+        turnOffMobileSelectionMode();
+    }, [isLessThanMediumScreen, selectionMode?.isEnabled]);
 
     /**
      * Add free policies (workspaces) to the list of menu items and returns the list of menu items
@@ -429,6 +299,143 @@ function WorkspacesListPage() {
     const sortWorkspace = useCallback((workspaceItems: WorkspaceItem[]) => workspaceItems.sort((a, b) => localeCompare(a.title, b.title)), []);
     const [inputValue, setInputValue, filteredWorkspaces] = useSearchResults(workspaces, filterWorkspace, sortWorkspace);
 
+    const confirmDeleteAndHideModal = () => {
+        // if (!policyIDToDelete || !policyNameToDelete) {
+        //     return;
+        // }
+
+        // deleteWorkspace(policyIDToDelete, policyNameToDelete);
+        const selectedPolicy = filteredWorkspaces.filter((workspace) => selectedPolicyIDs.includes(workspace.policyID ?? ''));
+        selectedPolicy.forEach((policy) => {
+            deleteWorkspace(policy.policyID ?? '', policy.title);
+        });
+        setIsDeleteModalOpen(false);
+    };
+    
+    const togglePolicy = useCallback((policyID: string) => {
+        if (selectedPolicyIDs.includes(policyID)) {
+            setSelectedPolicyIDs(selectedPolicyIDs.filter((id) => id !== policyID));
+        } else {
+            setSelectedPolicyIDs([...selectedPolicyIDs, policyID]);
+        }
+    }, [selectedPolicyIDs]);
+    /**
+     * Gets the menu item for each workspace
+     */
+    const getMenuItem = useCallback(
+        ({item, index}: GetMenuItem) => {
+            const isDefault = activePolicyID === item.policyID;
+
+            return (
+                <OfflineWithFeedback
+                    key={`${item.title}_${index}`}
+                    pendingAction={item.pendingAction}
+                    errorRowStyles={styles.ph5}
+                    onClose={item.dismissError}
+                    errors={item.errors}
+                    style={styles.mb2}
+                >
+                    <PressableWithoutFeedback
+                        role={CONST.ROLE.BUTTON}
+                        accessibilityLabel="row"
+                        style={[styles.mh5]}
+                        disabled={item.disabled}
+                        onPress={() => {
+                            if (selectionMode?.isEnabled) {
+                                togglePolicy(item.policyID ?? '');
+                            } else {
+                                item.action();
+                            }
+                        }}
+                        onLongPress={() => {
+                            if (!isLessThanMediumScreen) {
+                                return;
+                            }
+                            setSelectedPolicyID(item.policyID ?? '');
+                            setIsModalVisible(true);
+                        }}
+                    >
+                        {({hovered}) => (
+                            <WorkspacesListRow
+                                title={item.title}
+                                policyID={item.policyID}
+                                workspaceIcon={item.icon}
+                                ownerAccountID={item.ownerAccountID}
+                                workspaceType={item.type}
+                                isJoinRequestPending={item?.isJoinRequestPending}
+                                rowStyles={hovered && styles.hoveredComponentBG}
+                                layoutWidth={isLessThanMediumScreen ? CONST.LAYOUT_WIDTH.NARROW : CONST.LAYOUT_WIDTH.WIDE}
+                                brickRoadIndicator={item.brickRoadIndicator}
+                                shouldDisableThreeDotsMenu={item.disabled}
+                                style={[item.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE ? styles.offlineFeedback.deleted : {}]}
+                                isDefault={isDefault}
+                                isLoadingBill={isLoadingBill}
+                                resetLoadingSpinnerIconIndex={resetLoadingSpinnerIconIndex}
+                                onCheckboxPress={togglePolicy}
+                                isSelected={selectedPolicyIDs.includes(item.policyID ?? '')}
+                            />
+                        )}
+                    </PressableWithoutFeedback>
+                </OfflineWithFeedback>
+            );
+        },
+        [activePolicyID, styles.ph5, styles.mb2, styles.mh5, styles.hoveredComponentBG, styles.offlineFeedback.deleted, selectionMode?.isEnabled, togglePolicy, isLessThanMediumScreen, isLoadingBill, resetLoadingSpinnerIconIndex, selectedPolicyIDs],
+    );
+
+    const bulkActions = useMemo(() => {
+        const options = [];
+
+        const selectedPolicy = filteredWorkspaces.filter((workspace) => selectedPolicyIDs.includes(workspace.policyID ?? ''));
+
+        const firstPolicy = selectedPolicy.find((policy) => policy?.policyID === selectedPolicyIDs?.at(0))
+        const canSetAsDefault = selectedPolicyIDs.length === 1 && !(firstPolicy?.policyID === activePolicyID) && !firstPolicy?.isJoinRequestPending;
+        if (canSetAsDefault) {
+            options.push({
+                text: translate('workspace.common.setAsDefault'),
+                onSelected: () => {
+                    updateDefaultPolicy(firstPolicy?.policyID ?? '', activePolicyID);
+                },
+                icon: Expensicons.Star,
+                value: 'setAsDefault',
+            });
+        }
+
+        const canLeaveWorkspaces = selectedPolicy.every((policy) => {
+            const isAdmin = isPolicyAdmin(policy as unknown as PolicyType, session?.email);
+            const isOwner = policy.ownerAccountID === session?.accountID;
+            return !(isAdmin || isOwner);
+        });
+        if (canLeaveWorkspaces) {
+            options.push({
+                text: translate('common.leave'),
+                onSelected: () => {
+                    selectedPolicy.forEach((policy) => {
+                        leaveWorkspace(policy.policyID ?? '');
+                    });
+                },
+                icon: Expensicons.Exit,
+                value: 'leaveWorkspace',
+            });
+        }
+
+        const canDeleteWorkspaces = selectedPolicy.every((policy) => {
+            const isOwner = policy.ownerAccountID === session?.accountID;
+            return isOwner;
+        });
+        if (canDeleteWorkspaces) {
+            options.push({
+                text: translate('workspace.common.delete'),
+                onSelected: () => {
+                    setIsDeleteModalOpen(true);
+                },
+                icon: Expensicons.Trashcan,
+                value: 'deleteWorkspace',
+            });
+        }
+
+        return options;
+    }, [activePolicyID, filteredWorkspaces, selectedPolicyIDs, session?.accountID, session?.email, translate]);
+
     const listHeaderComponent = (
         <>
             {isLessThanMediumScreen && <View style={styles.mt3} />}
@@ -443,6 +450,20 @@ function WorkspacesListPage() {
             {!isLessThanMediumScreen && filteredWorkspaces.length > 0 && (
                 <View style={[styles.flexRow, styles.gap5, styles.pt2, styles.pb3, styles.pr5, styles.pl10, styles.appBG]}>
                     <View style={[styles.flexRow, styles.flex2]}>
+                        <View style={[styles.mr3]}>
+                            <Checkbox
+                                isChecked={selectedPolicyIDs.length === filteredWorkspaces.length}
+                                isIndeterminate={selectedPolicyIDs.length > 0 && selectedPolicyIDs.length !== filteredWorkspaces.length}
+                                onPress={() => {
+                                    if (selectedPolicyIDs.length > 0) {
+                                        setSelectedPolicyIDs([]);
+                                    } else {
+                                        setSelectedPolicyIDs(filteredWorkspaces.map((workspace) => workspace.policyID ?? ''));
+                                    }
+                                }}
+                                accessibilityLabel={translate('workspace.people.selectAll')}
+                            />
+                        </View>
                         <Text
                             numberOfLines={1}
                             style={[styles.flexGrow1, styles.textLabelSupporting]}
@@ -473,13 +494,25 @@ function WorkspacesListPage() {
     );
 
     const getHeaderButton = () => (
-        <Button
-            accessibilityLabel={translate('workspace.new.newWorkspace')}
-            text={translate('workspace.new.newWorkspace')}
-            onPress={() => interceptAnonymousUser(() => Navigation.navigate(ROUTES.WORKSPACE_CONFIRMATION.getRoute(ROUTES.WORKSPACES_LIST.route)))}
-            icon={Expensicons.Plus}
-            style={[shouldUseNarrowLayout && [styles.flexGrow1, styles.mb3]]}
-        />
+        selectedPolicyIDs.length === 0 ? (
+            <Button
+                accessibilityLabel={translate('workspace.new.newWorkspace')}
+                text={translate('workspace.new.newWorkspace')}
+                onPress={() => interceptAnonymousUser(() => Navigation.navigate(ROUTES.WORKSPACE_CONFIRMATION.getRoute(ROUTES.WORKSPACES_LIST.route)))}
+                icon={Expensicons.Plus}
+                style={[shouldUseNarrowLayout && [styles.flexGrow1, styles.mb3]]}
+            />
+        ) : (
+            <View>
+                <ButtonWithDropdownMenu
+                    onPress={() => null}
+                    options={bulkActions}
+                    customText={translate('workspace.common.selected', {count: selectedPolicyIDs.length})}
+                    isSplitButton={false}
+                    shouldAlwaysShowDropdownMenu
+                />
+            </View>
+        )
     );
 
     const onBackButtonPress = () => {
@@ -536,9 +569,69 @@ function WorkspacesListPage() {
             enableEdgeToEdgeBottomSafeAreaPadding={false}
             bottomContent={shouldUseNarrowLayout && <NavigationTabBar selectedTab={NAVIGATION_TABS.WORKSPACES} />}
         >
+            {isLessThanMediumScreen && !!selectionMode?.isEnabled && (
+                <HeaderWithBackButton
+                    title={translate('common.selectMultiple')}
+                    onBackButtonPress={() => {
+                        setSelectedPolicyIDs([]);
+                        turnOffMobileSelectionMode();
+                    }}
+                >
+                    {isMediumScreenWidth && getHeaderButton()}
+                </HeaderWithBackButton>
+            )}
             <View style={styles.flex1}>
-                <TopBar breadcrumbLabel={translate('common.workspaces')}>{!shouldUseNarrowLayout && <View style={[styles.pr2]}>{getHeaderButton()}</View>}</TopBar>
-                {shouldUseNarrowLayout && <View style={[styles.ph5, styles.pt2]}>{getHeaderButton()}</View>}
+                {!selectionMode?.isEnabled && (
+                    <TopBar breadcrumbLabel={translate('common.workspaces')}>{!shouldUseNarrowLayout && <View style={[styles.pr2]}>{getHeaderButton()}</View>}</TopBar>
+                )}
+                {shouldUseNarrowLayout && !selectionMode?.isEnabled && <View style={[styles.ph5, styles.pt2]}>{getHeaderButton()}</View>}
+
+                {!!selectionMode?.isEnabled && (
+                    <>
+                        {shouldUseNarrowLayout && (    
+                            <View style={[styles.ph5, styles.pt2]}>
+                                <ButtonWithDropdownMenu
+                                    onPress={() => null}
+                                    options={bulkActions}
+                                    customText={translate('workspace.common.selected', {count: selectedPolicyIDs.length})}
+                                    isSplitButton={false}
+                                    shouldAlwaysShowDropdownMenu
+                                />
+                            </View>
+                        )}
+
+                        <View style={[styles.alignItemsCenter, styles.userSelectNone, styles.flexRow, styles.pt6, styles.ph10]}>
+                            <Checkbox
+                                accessibilityLabel={translate('workspace.people.selectAll')}
+                                isChecked={selectedPolicyIDs.length === filteredWorkspaces.length}
+                                isIndeterminate={selectedPolicyIDs.length > 0 && selectedPolicyIDs.length !== filteredWorkspaces.length}
+                                onPress={() => {
+                                    if (selectedPolicyIDs.length !== 0) {
+                                        setSelectedPolicyIDs([]);
+                                    } else {
+                                        setSelectedPolicyIDs(filteredWorkspaces.map((workspace) => workspace.policyID ?? ''));
+                                    }
+                                }}
+                            />
+                            <PressableWithFeedback
+                                style={[styles.userSelectNone, styles.alignItemsCenter]}
+                                onPress={() => {
+                                    if (selectedPolicyIDs.length === filteredWorkspaces.length) {
+                                        setSelectedPolicyIDs([]);
+                                    } else {
+                                        setSelectedPolicyIDs(filteredWorkspaces.map((workspace) => workspace.policyID ?? ''));
+                                    }
+                                }}
+                                accessibilityLabel={translate('workspace.people.selectAll')}
+                                role="button"
+                                accessibilityState={{checked: selectedPolicyIDs.length === filteredWorkspaces.length}}
+                                dataSet={{[CONST.SELECTION_SCRAPER_HIDDEN_ELEMENT]: true}}
+                            >
+                                <Text style={[styles.textStrong, styles.ph3]}>{translate('workspace.people.selectAll')}</Text>
+                            </PressableWithFeedback>
+                        </View>
+                    </>
+                )}
                 <FlatList
                     data={filteredWorkspaces}
                     renderItem={getMenuItem}
@@ -560,6 +653,24 @@ function WorkspacesListPage() {
                 isModalOpen={isSupportalActionRestrictedModalOpen}
                 hideSupportalModal={hideSupportalModal}
             />
+            <Modal
+                isVisible={isModalVisible}
+                type={CONST.MODAL.MODAL_TYPE.BOTTOM_DOCKED}
+                onClose={() => setIsModalVisible(false)}
+                shouldPreventScrollOnFocus
+            >
+                <MenuItem
+                    title={translate('common.select')}
+                    icon={Expensicons.CheckSquare}
+                    onPress={() => {
+                        if (!selectionMode?.isEnabled) {
+                            turnOnMobileSelectionMode();
+                        }
+                        togglePolicy(selectedPolicyID);
+                        setIsModalVisible(false);
+                    }}
+                />
+            </Modal>
             {shouldDisplayLHB && <NavigationTabBar selectedTab={NAVIGATION_TABS.WORKSPACES} />}
         </ScreenWrapper>
     );

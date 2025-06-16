@@ -5,6 +5,7 @@ import type {StyleProp, ViewStyle} from 'react-native';
 import type {ValueOf} from 'type-fest';
 import Avatar from '@components/Avatar';
 import Badge from '@components/Badge';
+import Checkbox from '@components/Checkbox';
 import Icon from '@components/Icon';
 import * as Expensicons from '@components/Icon/Expensicons';
 import * as Illustrations from '@components/Icon/Illustrations';
@@ -16,6 +17,7 @@ import type {WithCurrentUserPersonalDetailsProps} from '@components/withCurrentU
 import withCurrentUserPersonalDetails from '@components/withCurrentUserPersonalDetails';
 import WorkspacesListRowDisplayName from '@components/WorkspacesListRowDisplayName';
 import useLocalize from '@hooks/useLocalize';
+import useMobileSelectionMode from '@hooks/useMobileSelectionMode';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
@@ -42,9 +44,6 @@ type WorkspacesListRowProps = WithCurrentUserPersonalDetailsProps & {
 
     /** Icon to be used when workspaceIcon is not present */
     fallbackWorkspaceIcon?: AvatarSource;
-
-    /** Items for the three dots menu */
-    menuItems: PopoverMenuItem[];
 
     /** Renders the component using big screen layout or small screen layout. When layoutWidth === WorkspaceListRowLayout.NONE,
      * component will return null to prevent layout from jumping on initial render and when parent width changes. */
@@ -76,6 +75,12 @@ type WorkspacesListRowProps = WithCurrentUserPersonalDetailsProps & {
 
     /** Function to reset loading spinner icon index */
     resetLoadingSpinnerIconIndex?: () => void;
+
+    /** Function to handle checkbox press */
+    onCheckboxPress?: (policyID: string) => void;
+
+    /** Whether the workspace is selected */
+    isSelected?: boolean;
 };
 
 type BrickRoadIndicatorIconProps = {
@@ -106,7 +111,6 @@ function BrickRoadIndicatorIcon({brickRoadIndicator}: BrickRoadIndicatorIconProp
 
 function WorkspacesListRow({
     title,
-    menuItems,
     workspaceIcon,
     fallbackWorkspaceIcon,
     ownerAccountID,
@@ -122,11 +126,15 @@ function WorkspacesListRow({
     isDefault,
     isLoadingBill,
     resetLoadingSpinnerIconIndex,
+    onCheckboxPress = () => {},
+    isSelected,
 }: WorkspacesListRowProps) {
     const styles = useThemeStyles();
     const {translate} = useLocalize();
     const threeDotsMenuContainerRef = useRef<View>(null);
-    const {shouldUseNarrowLayout} = useResponsiveLayout();
+    const {shouldUseNarrowLayout, isMediumScreenWidth} = useResponsiveLayout();
+    const isLessThanMediumScreen = isMediumScreenWidth || shouldUseNarrowLayout;
+    const {selectionMode} = useMobileSelectionMode();
 
     const ownerDetails = ownerAccountID && getPersonalDetailsByIDs({accountIDs: [ownerAccountID], currentUserAccountID: currentUserPersonalDetails.accountID}).at(0);
     const threeDotsMenuRef = useRef<{hidePopoverMenu: () => void; isPopupMenuVisible: boolean}>(null);
@@ -195,31 +203,31 @@ function WorkspacesListRow({
                     </View>
                 </Tooltip>
             )}
-            {!isJoinRequestPending && (
-                <View style={[styles.flexRow, styles.ml2, styles.gap1]}>
-                    <View style={[styles.flexRow, styles.gap2, styles.alignItemsCenter, isNarrow && styles.workspaceListRBR]}>
-                        <BrickRoadIndicatorIcon brickRoadIndicator={brickRoadIndicator} />
-                    </View>
-                    <View ref={threeDotsMenuContainerRef}>
-                        <ThreeDotsMenu
-                            getAnchorPosition={calculateAndSetThreeDotsMenuPosition}
-                            menuItems={menuItems}
-                            anchorAlignment={{horizontal: CONST.MODAL.ANCHOR_ORIGIN_HORIZONTAL.RIGHT, vertical: CONST.MODAL.ANCHOR_ORIGIN_VERTICAL.TOP}}
-                            shouldOverlay
-                            disabled={shouldDisableThreeDotsMenu}
-                            isNested
-                            threeDotsMenuRef={threeDotsMenuRef}
-                        />
-                    </View>
-                </View>
-            )}
         </View>
     );
 
     return (
-        <View style={[styles.flexRow, styles.highlightBG, rowStyles, style, isWide && styles.gap5, styles.br3, styles.p5]}>
+        <View style={[styles.flexRow, styles.highlightBG, rowStyles, style, isWide && styles.gap5, styles.br3, styles.p5, styles.alignItemsCenter]}>
+            {isLessThanMediumScreen && !!selectionMode?.isEnabled && (
+                <View style={[styles.mr3]}>
+                    <Checkbox
+                        isChecked={isSelected}
+                        onPress={() => onCheckboxPress(policyID ?? '')}
+                        accessibilityLabel={translate('workspace.people.selectAll')}
+                    />
+                </View>
+            )}
             <View style={[isWide ? styles.flexRow : styles.flexColumn, styles.flex1, isWide && styles.gap5]}>
                 <View style={[styles.flexRow, styles.justifyContentBetween, styles.flex2, isNarrow && styles.mb3, styles.alignItemsCenter]}>
+                    {!isLessThanMediumScreen && (
+                        <View style={[styles.mr3]}>
+                            <Checkbox
+                                isChecked={isSelected}
+                                onPress={() => onCheckboxPress(policyID ?? '')}
+                                accessibilityLabel={translate('workspace.people.selectAll')}
+                            />
+                        </View>
+                    )}
                     <View style={[styles.flexRow, styles.gap3, styles.flex1, styles.alignItemsCenter]}>
                         <Avatar
                             imageStyles={[styles.alignSelfCenter]}
@@ -291,7 +299,6 @@ function WorkspacesListRow({
                     </View>
                 </View>
             </View>
-
             {!shouldUseNarrowLayout && ThreeDotMenuOrPendingIcon}
         </View>
     );
