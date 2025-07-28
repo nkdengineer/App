@@ -229,7 +229,7 @@ function DelegatePage() {
             {({safeAreaPaddingBottomStyle}) => (
                 <>
                     <HeaderWithBackButton
-                        title={translate('initialSettingsPage.security')}
+                        title={translate('delegate.copilotDelegatedAccess')}
                         shouldShowBackButton={shouldUseNarrowLayout}
                         onBackButtonPress={Navigation.popToSidebar}
                         icon={Illustrations.LockClosed}
