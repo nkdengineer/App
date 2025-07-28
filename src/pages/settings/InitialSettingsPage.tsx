@@ -172,6 +172,12 @@ function InitialSettingsPage({currentUserPersonalDetails}: InitialSettingsPagePr
                 action: () => Navigation.navigate(ROUTES.SETTINGS_PREFERENCES),
             },
             {
+                translationKey: 'delegate.copilotDelegatedAccess',
+                icon: Expensicons.Lock,
+                screenName: SCREENS.SETTINGS.DELEGATE.ROOT,
+                action: () => Navigation.navigate(ROUTES.SETTINGS_DELEGATE),
+            },
+            {
                 translationKey: 'initialSettingsPage.security',
                 icon: Expensicons.Lock,
                 screenName: SCREENS.SETTINGS.SECURITY,

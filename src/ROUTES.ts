@@ -210,6 +210,7 @@ const ROUTES = {
     SETTINGS_PAYMENT_CURRENCY: 'setting/preferences/payment-currency',
     SETTINGS_THEME: 'settings/preferences/theme',
     SETTINGS_SECURITY: 'settings/security',
+    SETTINGS_DELEGATE: 'settings/delegate',
     SETTINGS_CLOSE: 'settings/security/closeAccount',
     SETTINGS_MERGE_ACCOUNTS: {
         route: 'settings/security/merge-accounts',

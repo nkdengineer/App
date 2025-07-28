@@ -141,6 +141,7 @@ const SCREENS = {
         },
 
         DELEGATE: {
+            ROOT: 'Settings_Delegate',
             ADD_DELEGATE: 'Settings_Delegate_Add',
             DELEGATE_ROLE: 'Settings_Delegate_Role',
             DELEGATE_CONFIRM: 'Settings_Delegate_Confirm',

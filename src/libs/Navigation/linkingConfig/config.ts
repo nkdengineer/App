@@ -1699,6 +1699,10 @@ const config: LinkingOptions<RootNavigatorParamList>['config'] = {
                     path: ROUTES.SETTINGS_PROFILE.route,
                     exact: true,
                 },
+                [SCREENS.SETTINGS.DELEGATE.ROOT]: {
+                    path: ROUTES.SETTINGS_DELEGATE,
+                    exact: true,
+                },
                 [SCREENS.SETTINGS.SECURITY]: {
                     path: ROUTES.SETTINGS_SECURITY,
                     exact: true,
