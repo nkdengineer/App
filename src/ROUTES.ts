@@ -227,20 +227,20 @@ const ROUTES = {
     SETTINGS_LOCK_ACCOUNT: 'settings/security/lock-account',
     SETTINGS_UNLOCK_ACCOUNT: 'settings/security/unlock-account',
     SETTINGS_FAILED_TO_LOCK_ACCOUNT: 'settings/security/failed-to-lock-account',
-    SETTINGS_ADD_DELEGATE: 'settings/security/delegate',
+    SETTINGS_ADD_DELEGATE: 'settings/delegate/add',
     SETTINGS_DELEGATE_ROLE: {
-        route: 'settings/security/delegate/:login/role/:role',
-        getRoute: (login: string, role?: string, backTo?: string) => getUrlWithBackToParam(`settings/security/delegate/${encodeURIComponent(login)}/role/${role}`, backTo),
+        route: 'settings/delegate/add/:login/role/:role',
+        getRoute: (login: string, role?: string, backTo?: string) => getUrlWithBackToParam(`settings/delegate/add/${encodeURIComponent(login)}/role/${role}`, backTo),
     },
     SETTINGS_UPDATE_DELEGATE_ROLE: {
-        route: 'settings/security/delegate/:login/update-role/:currentRole',
-        getRoute: (login: string, currentRole: string) => `settings/security/delegate/${encodeURIComponent(login)}/update-role/${currentRole}` as const,
+        route: 'settings/delegate/edit/:login/update-role/:currentRole',
+        getRoute: (login: string, currentRole: string) => `settings/delegate/edit/${encodeURIComponent(login)}/update-role/${currentRole}` as const,
     },
     SETTINGS_DELEGATE_CONFIRM: {
-        route: 'settings/security/delegate/:login/role/:role/confirm',
+        route: 'settings/delegate/add/:login/role/:role/confirm',
         getRoute: (login: string, role: string, showValidateActionModal?: boolean) => {
             const validateActionModalParam = showValidateActionModal ? `?showValidateActionModal=true` : '';
-            return `settings/security/delegate/${encodeURIComponent(login)}/role/${role}/confirm${validateActionModalParam}` as const;
+            return `settings/delegate/add/${encodeURIComponent(login)}/role/${role}/confirm${validateActionModalParam}` as const;
         },
     },
     SETTINGS_ABOUT: 'settings/about',

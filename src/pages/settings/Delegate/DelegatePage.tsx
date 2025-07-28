@@ -38,6 +38,7 @@ import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type {Delegate} from '@src/types/onyx/Account';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
+import LottieAnimations from '@components/LottieAnimations';
 
 function DelegatePage() {
     const styles = useThemeStyles();
@@ -255,6 +256,7 @@ function DelegatePage() {
                                     subtitleMuted
                                     titleStyles={styles.accountSettingsSectionTitle}
                                     childrenStyles={styles.pt5}
+                                    illustration={LottieAnimations.Safe}
                                 >
                                     {hasDelegates && (
                                         <>
