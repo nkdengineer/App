@@ -21,6 +21,7 @@ import Permissions from '@libs/Permissions';
 import {getPersonalDetailsByIDs} from '@libs/PersonalDetailsUtils';
 import {
     getCommaSeparatedTagNameWithSanitizedColons,
+    getDistanceRateCustomUnit,
     getDistanceRateCustomUnitRate,
     getPolicy,
     getTaxByID,
@@ -1414,6 +1415,10 @@ function getDefaultTaxCode(policy: OnyxEntry<Policy>, transaction: OnyxEntry<Tra
     if (isDistanceRequest(transaction)) {
         const customUnitRateID = getRateID(transaction) ?? '';
         const customUnitRate = getDistanceRateCustomUnitRate(policy, customUnitRateID);
+        const customUnit = getDistanceRateCustomUnit(policy);
+        if(!customUnitRate?.attributes?.taxRateExternalID && customUnit?.attributes?.taxEnabled) {
+            return policy?.taxRates?.defaultExternalID;
+        }
         return customUnitRate?.attributes?.taxRateExternalID;
     }
     const defaultExternalID = policy?.taxRates?.defaultExternalID;
