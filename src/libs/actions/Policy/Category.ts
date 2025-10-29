@@ -8,10 +8,12 @@ import type {
     GetPolicyCategoriesParams,
     OpenPolicyCategoriesPageParams,
     RemovePolicyCategoryReceiptsRequiredParams,
+    RemovePolicyCategoryItemizedReceiptsRequiredParams,
     SetPolicyCategoryApproverParams,
     SetPolicyCategoryDescriptionRequiredParams,
     SetPolicyCategoryMaxAmountParams,
     SetPolicyCategoryReceiptsRequiredParams,
+    SetPolicyCategoryItemizedReceiptsRequiredParams,
     SetPolicyCategoryTaxParams,
     SetWorkspaceCategoryDescriptionHintParams,
     UpdatePolicyCategoryGLCodeParams,
@@ -585,6 +587,127 @@ function removePolicyCategoryReceiptsRequired(policyID: string, categoryName: st
     };
 
     API.write(WRITE_COMMANDS.REMOVE_POLICY_CATEGORY_RECEIPTS_REQUIRED, parameters, onyxData);
+}
+
+function setPolicyCategoryItemizedReceiptsRequired(policyID: string, categoryName: string, maxAmountNoItemizedReceipt: number, policyCategories: PolicyCategories = {}) {
+    const originalMaxAmountNoItemizedReceipt = policyCategories?.[categoryName]?.maxAmountNoItemizedReceipt;
+
+    const onyxData: OnyxData = {
+        optimisticData: [
+            {
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policyID}`,
+                value: {
+                    [categoryName]: {
+                        pendingAction: CONST.RED_BRICK_ROAD_PENDING_ACTION.UPDATE,
+                        pendingFields: {
+                            maxAmountNoItemizedReceipt: CONST.RED_BRICK_ROAD_PENDING_ACTION.UPDATE,
+                        },
+                        maxAmountNoItemizedReceipt,
+                    },
+                },
+            },
+        ],
+        successData: [
+            {
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policyID}`,
+                value: {
+                    [categoryName]: {
+                        pendingAction: null,
+                        pendingFields: {
+                            maxAmountNoItemizedReceipt: null,
+                        },
+                        maxAmountNoItemizedReceipt,
+                    },
+                },
+            },
+        ],
+        failureData: [
+            {
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policyID}`,
+                value: {
+                    [categoryName]: {
+                        errors: ErrorUtils.getMicroSecondOnyxErrorWithTranslationKey('common.genericErrorMessage'),
+                        pendingAction: null,
+                        pendingFields: {
+                            maxAmountNoItemizedReceipt: null,
+                        },
+                        maxAmountNoItemizedReceipt: originalMaxAmountNoItemizedReceipt,
+                    },
+                },
+            },
+        ],
+    };
+
+    const parameters: SetPolicyCategoryItemizedReceiptsRequiredParams = {
+        policyID,
+        categoryName,
+        maxExpenseAmountNoItemizedReceipt: maxAmountNoItemizedReceipt,
+    };
+
+    API.write(WRITE_COMMANDS.SET_POLICY_CATEGORY_ITEMIZED_RECEIPTS_REQUIRED, parameters, onyxData);
+}
+
+function removePolicyCategoryItemizedReceiptsRequired(policyID: string, categoryName: string, policyCategories: PolicyCategories = {}) {
+    const originalMaxAmountNoItemizedReceipt = policyCategories?.[categoryName]?.maxAmountNoItemizedReceipt;
+
+    const onyxData: OnyxData = {
+        optimisticData: [
+            {
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policyID}`,
+                value: {
+                    [categoryName]: {
+                        pendingAction: CONST.RED_BRICK_ROAD_PENDING_ACTION.UPDATE,
+                        pendingFields: {
+                            maxAmountNoItemizedReceipt: CONST.RED_BRICK_ROAD_PENDING_ACTION.UPDATE,
+                        },
+                        maxAmountNoItemizedReceipt: null,
+                    },
+                },
+            },
+        ],
+        successData: [
+            {
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policyID}`,
+                value: {
+                    [categoryName]: {
+                        pendingAction: null,
+                        pendingFields: {
+                            maxAmountNoItemizedReceipt: null,
+                        },
+                        maxAmountNoItemizedReceipt: null,
+                    },
+                },
+            },
+        ],
+        failureData: [
+            {
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policyID}`,
+                value: {
+                    [categoryName]: {
+                        errors: ErrorUtils.getMicroSecondOnyxErrorWithTranslationKey('common.genericErrorMessage'),
+                        pendingAction: null,
+                        pendingFields: {
+                            maxAmountNoItemizedReceipt: null,
+                        },
+                        maxAmountNoItemizedReceipt: originalMaxAmountNoItemizedReceipt,
+                    },
+                },
+            },
+        ],
+    };
+
+    const parameters: RemovePolicyCategoryItemizedReceiptsRequiredParams = {
+        policyID,
+        categoryName,
+    };
+
+    API.write(WRITE_COMMANDS.REMOVE_POLICY_CATEGORY_ITEMIZED_RECEIPTS_REQUIRED, parameters, onyxData);
 }
 
 function createPolicyCategory(
@@ -1486,6 +1609,7 @@ export {
     importPolicyCategories,
     openPolicyCategoriesPage,
     removePolicyCategoryReceiptsRequired,
+    removePolicyCategoryItemizedReceiptsRequired,
     renamePolicyCategory,
     setPolicyCategoryApprover,
     setPolicyCategoryDescriptionRequired,
@@ -1494,6 +1618,7 @@ export {
     setPolicyCategoryMaxAmount,
     setPolicyCategoryPayrollCode,
     setPolicyCategoryReceiptsRequired,
+    setPolicyCategoryItemizedReceiptsRequired,
     setPolicyCategoryTax,
     setPolicyCustomUnitDefaultCategory,
     setWorkspaceCategoryDescriptionHint,

@@ -81,6 +81,7 @@ export type {RulesAutoApproveReportsUnderModalForm} from './RulesAutoApproveRepo
 export type {RulesRandomReportAuditModalForm} from './RulesRandomReportAuditModalForm';
 export type {RulesAutoPayReportsUnderModalForm} from './RulesAutoPayReportsUnderModalForm';
 export type {RulesRequiredReceiptAmountForm} from './RulesRequiredReceiptAmountForm';
+export type {RulesItemizedReceiptRequiredAmountForm} from './RulesItemizedReceiptRequiredAmountForm';
 export type {RulesMaxExpenseAmountForm} from './RulesMaxExpenseAmountForm';
 export type {RulesMaxExpenseAgeForm} from './RulesMaxExpenseAgeForm';
 export type {RulesCustomForm} from './RulesCustomForm';
