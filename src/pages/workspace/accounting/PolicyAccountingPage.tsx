@@ -2,6 +2,7 @@ import {useFocusEffect, useRoute} from '@react-navigation/native';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {View} from 'react-native';
 import ActivityIndicator from '@components/ActivityIndicator';
+import Badge from '@components/Badge';
 import Button from '@components/Button';
 import CollapsibleSection from '@components/CollapsibleSection';
 import ConfirmModal from '@components/ConfirmModal';
@@ -14,6 +15,7 @@ import MenuItem from '@components/MenuItem';
 import MenuItemList from '@components/MenuItemList';
 import type {MenuItemWithLink} from '@components/MenuItemList';
 import OfflineWithFeedback from '@components/OfflineWithFeedback';
+import PressableWithoutFeedback from '@components/Pressable/PressableWithoutFeedback';
 import ScreenWrapper from '@components/ScreenWrapper';
 import ScrollView from '@components/ScrollView';
 import Section from '@components/Section';
@@ -21,6 +23,7 @@ import Text from '@components/Text';
 import TextLink from '@components/TextLink';
 import ThreeDotsMenu from '@components/ThreeDotsMenu';
 import type ThreeDotsMenuProps from '@components/ThreeDotsMenu/types';
+import useConfirmModal from '@hooks/useConfirmModal';
 import useEnvironment from '@hooks/useEnvironment';
 import useExpensifyCardFeeds from '@hooks/useExpensifyCardFeeds';
 import {useMemoizedLazyExpensifyIcons, useMemoizedLazyIllustrations} from '@hooks/useLazyAsset';
@@ -82,6 +85,7 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
     const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
     const [datetimeToRelative, setDateTimeToRelative] = useState('');
     const {startIntegrationFlow, popoverAnchorRefs} = useAccountingContext();
+    const {showConfirmModal} = useConfirmModal();
     const [account] = useOnyx(ONYXKEYS.ACCOUNT, {canBeMissing: false});
     const {isLargeScreenWidth} = useResponsiveLayout();
     const route = useRoute();
@@ -280,6 +284,7 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
                               iconType: CONST.ICON_TYPE_AVATAR,
                           }
                         : {};
+                    const isXero = integration === CONST.POLICY.CONNECTIONS.NAME.XERO;
 
                     return {
                         ...iconProps,
@@ -287,21 +292,37 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
                         wrapperStyle: [styles.sectionMenuItemTopDescription],
                         shouldShowRightComponent: true,
                         title: integrationData?.title,
+                        badgeText: isXero ? "Exclusive offer" : undefined,
+                        onBadgePress: isXero
+                            ? () => {
+                                  showConfirmModal({
+                                      title: 'Exclusive offer',
+                                      prompt: (
+                                          <Text>
+                                              New to Xero? Get 6 months of Xero free as an Expensify customer!{' '}
+                                              <TextLink href="https://www.xero.com/us/trial/">Sign up here</TextLink>
+                                          </Text>
+                                      ),
+                                      confirmText: translate('common.close'),
+                                      shouldShowCancelButton: false,
+                                  });
+                              }
+                            : undefined,
                         rightComponent: (
-                            <Button
-                                onPress={() => startIntegrationFlow({name: integration})}
-                                text={translate('workspace.accounting.setup')}
-                                style={styles.justifyContentCenter}
-                                small
-                                isDisabled={isOffline}
-                                ref={(ref) => {
-                                    if (!popoverAnchorRefs?.current) {
-                                        return;
-                                    }
-                                    // eslint-disable-next-line react-compiler/react-compiler
-                                    popoverAnchorRefs.current[integration].current = ref;
-                                }}
-                            />
+                                <Button
+                                    onPress={() => startIntegrationFlow({name: integration})}
+                                    text={translate('workspace.accounting.setup')}
+                                    style={[styles.justifyContentCenter, isXero ? styles.ml2 : undefined]}
+                                    small
+                                    isDisabled={isOffline}
+                                    ref={(ref) => {
+                                        if (!popoverAnchorRefs?.current) {
+                                            return;
+                                        }
+                                        // eslint-disable-next-line react-compiler/react-compiler
+                                        popoverAnchorRefs.current[integration].current = ref;
+                                    }}
+                                />
                         ),
                     };
                 })
@@ -413,6 +434,10 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
         styles.mt5,
         styles.popoverMenuIcon,
         styles.justifyContentCenter,
+        styles.flexRow,
+        styles.alignItemsCenter,
+        styles.mr2,
+        styles.textMicro,
         shouldShowCardReconciliationOption,
         shouldShowSynchronizationError,
         synchronizationError,
@@ -441,10 +466,28 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
                 }
 
                 const iconProps = integrationData?.icon ? {icon: integrationData.icon, iconType: CONST.ICON_TYPE_AVATAR} : {};
+                console.log("integration", integration);
+                const isXero = integration === CONST.POLICY.CONNECTIONS.NAME.XERO;
 
                 return {
                     ...iconProps,
                     title: integrationData?.title,
+                    badgeText: isXero ? "Exclusive offer" : undefined,
+                    onBadgePress: isXero
+                        ? () => {
+                              showConfirmModal({
+                                  title: 'Exclusive offer',
+                                  prompt: (
+                                      <Text>
+                                          New to Xero? Get 6 months of Xero free as an Expensify customer!{' '}
+                                          <TextLink href="https://www.xero.com/us/trial/">Sign up here</TextLink>
+                                      </Text>
+                                  ),
+                                  confirmText: translate('common.close'),
+                                  shouldShowCancelButton: false,
+                              });
+                          }
+                        : undefined,
                     rightComponent: (
                         <Button
                             onPress={() =>
@@ -455,7 +498,7 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
                                 })
                             }
                             text={translate('workspace.accounting.setup')}
-                            style={styles.justifyContentCenter}
+                            style={[styles.justifyContentCenter, isXero ? styles.ml2 : undefined]}
                             small
                             isDisabled={isOffline}
                             ref={(r) => {
@@ -482,6 +525,10 @@ function PolicyAccountingPage({policy}: PolicyAccountingPageProps) {
         translate,
         styles.justifyContentCenter,
         styles.sectionMenuItemTopDescription,
+        styles.flexRow,
+        styles.alignItemsCenter,
+        styles.mr2,
+        styles.textMicro,
         isOffline,
         startIntegrationFlow,
         popoverAnchorRefs,
