@@ -393,6 +393,9 @@ type MenuItemBaseProps = {
 
     /** Whether the screen containing the item is focused */
     isFocused?: boolean;
+
+    /** Callback to fire when the badge is pressed */
+    onBadgePress?: () => void;
 };
 
 type MenuItemProps = (IconProps | AvatarProps | NoIcon) & MenuItemBaseProps;
@@ -520,6 +523,7 @@ function MenuItem({
     hasSubMenuItems = false,
     ref,
     isFocused,
+    onBadgePress,
 }: MenuItemProps) {
     const theme = useTheme();
     const styles = useThemeStyles();
@@ -914,6 +918,8 @@ function MenuItem({
                                                         icon={badgeIcon}
                                                         badgeStyles={badgeStyle}
                                                         success={badgeSuccess}
+                                                        onPress={onBadgePress}
+                                                        pressable={!!onBadgePress}
                                                     />
                                                 )}
                                                 {/* Since subtitle can be of type number, we should allow 0 to be shown */}
