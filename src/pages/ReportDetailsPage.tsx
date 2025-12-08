@@ -697,6 +697,91 @@ function ReportDetailsPage({policy, report, route, reportMetadata}: ReportDetail
         return result;
     }, [canJoin, report, backTo]);
 
+
+    const nameSectionGroupWorkspace = (
+        <OfflineWithFeedback
+            pendingAction={report?.pendingFields?.reportName}
+            errors={report?.errorFields?.reportName}
+            errorRowStyles={[styles.ph5]}
+            onClose={() => clearPolicyRoomNameErrors(report?.reportID)}
+        >
+            <View style={[styles.flex1, !shouldDisableRename && styles.mt3]}>
+                <MenuItemWithTopDescription
+                    shouldShowRightIcon={!shouldDisableRename}
+                    interactive={!shouldDisableRename}
+                    title={StringUtils.lineBreaksToSpaces(reportName)}
+                    titleStyle={styles.newKansasLarge}
+                    titleContainerStyle={shouldDisableRename && styles.alignItemsCenter}
+                    shouldCheckActionAllowedOnPress={false}
+                    description={!shouldDisableRename ? roomDescription : ''}
+                    furtherDetails={chatRoomSubtitle && !isGroupChat ? additionalRoomDetails : ''}
+                    furtherDetailsNumberOfLines={isWorkspaceChat ? 0 : undefined}
+                    furtherDetailsStyle={isWorkspaceChat ? [styles.textAlignCenter, styles.breakWord] : undefined}
+                    onPress={() => Navigation.navigate(ROUTES.REPORT_SETTINGS_NAME.getRoute(report.reportID, backTo))}
+                    numberOfLinesTitle={isThread ? 2 : 0}
+                    shouldBreakWord
+                />
+            </View>
+        </OfflineWithFeedback>
+    );
+
+    const titleField = useMemo<OnyxTypes.PolicyReportField | undefined>((): OnyxTypes.PolicyReportField | undefined => {
+        const fields = getAvailableReportFields(report, Object.values(policy?.fieldList ?? {}));
+        return fields.find((reportField) => isReportFieldOfTypeTitle(reportField));
+    }, [report, policy?.fieldList]);
+    const fieldKey = getReportFieldKey(titleField?.fieldID);
+    const isFieldDisabled = isReportFieldDisabled(report, titleField, policy);
+
+    const shouldShowTitleField = caseID !== CASES.MONEY_REQUEST && !isFieldDisabled && isAdminOwnerApproverOrReportOwner(report, policy);
+
+    const nameSectionFurtherDetailsContent = (
+        <ParentNavigationSubtitle
+            parentNavigationSubtitleData={parentNavigationSubtitleData}
+            reportID={report?.reportID}
+            parentReportID={report?.parentReportID}
+            parentReportActionID={report?.parentReportActionID}
+            pressableStyles={[styles.mt1, styles.mw100]}
+            subtitleNumberOfLines={2}
+            shouldShowFromText={false}
+        />
+    );
+
+    const nameSectionTitleField = !!titleField && (
+        <OfflineWithFeedback
+            pendingAction={report.pendingFields?.reportName}
+            errors={report.errorFields?.reportName}
+            errorRowStyles={styles.ph5}
+            key={`menuItem-${fieldKey}`}
+            onClose={() => clearPolicyRoomNameErrors(report.reportID)}
+        >
+            <View style={[styles.flex1]}>
+                <MenuItemWithTopDescription
+                    shouldShowRightIcon={!isFieldDisabled}
+                    interactive={!isFieldDisabled}
+                    title={reportName}
+                    titleStyle={styles.newKansasLarge}
+                    shouldCheckActionAllowedOnPress={false}
+                    description={Str.UCFirst(titleField.name)}
+                    onPress={() => {
+                        let policyID = report.policyID;
+
+                        if (!policyID) {
+                            policyID = '';
+                        }
+
+                        Navigation.navigate(ROUTES.EDIT_REPORT_FIELD_REQUEST.getRoute(report.reportID, policyID, titleField.fieldID, backTo));
+                    }}
+                    // furtherDetailsComponent={nameSectionFurtherDetailsContent}
+                />
+                <MenuItemWithTopDescription
+                    titleComponent={nameSectionFurtherDetailsContent}
+                    description={translate('threads.from')}
+                    interactive={false}
+                />
+            </View>
+        </OfflineWithFeedback>
+    );
+
     const nameSectionExpenseIOU = (
         <View style={[styles.reportDetailsRoomInfo, styles.mw100]}>
             {shouldDisableRename && (
@@ -751,84 +836,6 @@ function ReportDetailsPage({policy, report, route, reportMetadata}: ReportDetail
                 </View>
             )}
         </View>
-    );
-
-    const nameSectionGroupWorkspace = (
-        <OfflineWithFeedback
-            pendingAction={report?.pendingFields?.reportName}
-            errors={report?.errorFields?.reportName}
-            errorRowStyles={[styles.ph5]}
-            onClose={() => clearPolicyRoomNameErrors(report?.reportID)}
-        >
-            <View style={[styles.flex1, !shouldDisableRename && styles.mt3]}>
-                <MenuItemWithTopDescription
-                    shouldShowRightIcon={!shouldDisableRename}
-                    interactive={!shouldDisableRename}
-                    title={StringUtils.lineBreaksToSpaces(reportName)}
-                    titleStyle={styles.newKansasLarge}
-                    titleContainerStyle={shouldDisableRename && styles.alignItemsCenter}
-                    shouldCheckActionAllowedOnPress={false}
-                    description={!shouldDisableRename ? roomDescription : ''}
-                    furtherDetails={chatRoomSubtitle && !isGroupChat ? additionalRoomDetails : ''}
-                    furtherDetailsNumberOfLines={isWorkspaceChat ? 0 : undefined}
-                    furtherDetailsStyle={isWorkspaceChat ? [styles.textAlignCenter, styles.breakWord] : undefined}
-                    onPress={() => Navigation.navigate(ROUTES.REPORT_SETTINGS_NAME.getRoute(report.reportID, backTo))}
-                    numberOfLinesTitle={isThread ? 2 : 0}
-                    shouldBreakWord
-                />
-            </View>
-        </OfflineWithFeedback>
-    );
-
-    const titleField = useMemo<OnyxTypes.PolicyReportField | undefined>((): OnyxTypes.PolicyReportField | undefined => {
-        const fields = getAvailableReportFields(report, Object.values(policy?.fieldList ?? {}));
-        return fields.find((reportField) => isReportFieldOfTypeTitle(reportField));
-    }, [report, policy?.fieldList]);
-    const fieldKey = getReportFieldKey(titleField?.fieldID);
-    const isFieldDisabled = isReportFieldDisabled(report, titleField, policy);
-
-    const shouldShowTitleField = caseID !== CASES.MONEY_REQUEST && !isFieldDisabled && isAdminOwnerApproverOrReportOwner(report, policy);
-
-    const nameSectionFurtherDetailsContent = (
-        <ParentNavigationSubtitle
-            parentNavigationSubtitleData={parentNavigationSubtitleData}
-            reportID={report?.reportID}
-            parentReportID={report?.parentReportID}
-            parentReportActionID={report?.parentReportActionID}
-            pressableStyles={[styles.mt1, styles.mw100]}
-            subtitleNumberOfLines={2}
-        />
-    );
-
-    const nameSectionTitleField = !!titleField && (
-        <OfflineWithFeedback
-            pendingAction={report.pendingFields?.reportName}
-            errors={report.errorFields?.reportName}
-            errorRowStyles={styles.ph5}
-            key={`menuItem-${fieldKey}`}
-            onClose={() => clearPolicyRoomNameErrors(report.reportID)}
-        >
-            <View style={[styles.flex1]}>
-                <MenuItemWithTopDescription
-                    shouldShowRightIcon={!isFieldDisabled}
-                    interactive={!isFieldDisabled}
-                    title={reportName}
-                    titleStyle={styles.newKansasLarge}
-                    shouldCheckActionAllowedOnPress={false}
-                    description={Str.UCFirst(titleField.name)}
-                    onPress={() => {
-                        let policyID = report.policyID;
-
-                        if (!policyID) {
-                            policyID = '';
-                        }
-
-                        Navigation.navigate(ROUTES.EDIT_REPORT_FIELD_REQUEST.getRoute(report.reportID, policyID, titleField.fieldID, backTo));
-                    }}
-                    furtherDetailsComponent={nameSectionFurtherDetailsContent}
-                />
-            </View>
-        </OfflineWithFeedback>
     );
 
     const deleteTransaction = useCallback(() => {
@@ -950,10 +957,10 @@ function ReportDetailsPage({policy, report, route, reportMetadata}: ReportDetail
                 <ScrollView contentContainerStyle={[styles.flexGrow1]}>
                     <View style={[styles.reportDetailsTitleContainer, styles.pb0]}>
                         {renderedAvatar}
-                        {isExpenseReport && (!shouldShowTitleField || !titleField) && nameSectionExpenseIOU}
+                        {isExpenseReport && !isExpenseReportUtil(report) && (!shouldShowTitleField || !titleField) && nameSectionExpenseIOU}
                     </View>
 
-                    {isExpenseReport && shouldShowTitleField && titleField && nameSectionTitleField}
+                    {isExpenseReport && (shouldShowTitleField || isExpenseReportUtil(report)) && titleField && nameSectionTitleField}
 
                     {!isExpenseReport && nameSectionGroupWorkspace}
 
