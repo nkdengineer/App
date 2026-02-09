@@ -15,6 +15,7 @@ import {
     hasActionWithErrorsForTransaction,
     hasReceiptError,
     hasReportViolations,
+    isExpenseReport,
     isPaidGroupPolicyExpenseReport,
     isPaidGroupPolicy as isPaidGroupPolicyUtil,
     isReportApproved,
@@ -263,8 +264,8 @@ function getTransactionPreviewTextAndTranslationPaths({
     }
 
     if (hasFieldErrors && RBRMessage === undefined) {
-        const amountMissing = isAmountMissing(transaction, isPaidGroupPolicy);
-        const merchantMissing = isPaidGroupPolicy && isMerchantMissing(transaction);
+        const amountMissing = isAmountMissing(transaction, isExpenseReport(iouReport));
+        const merchantMissing = isExpenseReport(iouReport) && isMerchantMissing(transaction);
         if (amountMissing && merchantMissing) {
             RBRMessage = {translationPath: 'violations.reviewRequired'};
         } else if (merchantMissing) {

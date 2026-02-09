@@ -109,6 +109,7 @@ describe('TransactionPreviewUtils', () => {
         it('returns missing field message when appropriate', () => {
             const functionArgs = {
                 ...basicProps,
+                iouReport: {...basicProps.iouReport, type: CONST.REPORT.TYPE.EXPENSE},
                 transaction: {...basicProps.transaction, created: '', amount: 100},
                 originalTransaction: undefined,
                 shouldShowRBR: true,
