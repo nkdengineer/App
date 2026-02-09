@@ -23,7 +23,9 @@ import useOnyx from '@hooks/useOnyx';
 import usePermissions from '@hooks/usePermissions';
 import usePersonalPolicy from '@hooks/usePersonalPolicy';
 import usePolicy from '@hooks/usePolicy';
+import usePolicyForMovingExpenses from '@hooks/usePolicyForMovingExpenses';
 import usePrevious from '@hooks/usePrevious';
+import useSelfDMReport from '@hooks/useSelfDMReport';
 import useShowNotFoundPageInIOUStep from '@hooks/useShowNotFoundPageInIOUStep';
 import useThemeStyles from '@hooks/useThemeStyles';
 import useWaypointItems from '@hooks/useWaypointItems';
@@ -74,13 +76,14 @@ function IOURequestStepDistanceMap({
     const {isOffline} = useNetwork();
     const {translate} = useLocalize();
     const {isBetaEnabled} = usePermissions();
-
+    const {policyForMovingExpenses} = usePolicyForMovingExpenses();
     const [allReports] = useOnyx(ONYXKEYS.COLLECTION.REPORT, {canBeMissing: false});
     const [reportNameValuePairs] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT_NAME_VALUE_PAIRS}${report?.reportID}`, {canBeMissing: true});
     const isArchived = isArchivedReport(reportNameValuePairs);
     const [parentReport] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${getNonEmptyStringOnyxID(report?.parentReportID)}`, {canBeMissing: true});
     const [parentReportNextStep] = useOnyx(`${ONYXKEYS.COLLECTION.NEXT_STEP}${getNonEmptyStringOnyxID(report?.parentReportID)}`, {canBeMissing: true});
     const [transactionBackup] = useOnyx(`${ONYXKEYS.COLLECTION.TRANSACTION_BACKUP}${transactionID}`, {canBeMissing: true});
+    const selfDMReport = useSelfDMReport();
     const policy = usePolicy(report?.policyID);
     const [policyCategories] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${policy?.id}`, {canBeMissing: true});
     const [policyTags] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY_TAGS}${policy?.id}`, {canBeMissing: true});
@@ -93,7 +96,7 @@ function IOURequestStepDistanceMap({
     const [transactionViolations] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION_VIOLATIONS, {canBeMissing: true});
     const [optimisticWaypoints, setOptimisticWaypoints] = useState<WaypointCollection | null>(null);
     const [policyRecentlyUsedCurrencies] = useOnyx(ONYXKEYS.RECENTLY_USED_CURRENCIES, {canBeMissing: true});
-
+    const [betas] = useOnyx(ONYXKEYS.BETAS, {canBeMissing: true});
     const transactionWaypoints = transaction?.comment?.waypoints;
     const areTransactionWaypointsEmpty = !transactionWaypoints || Object.values(transactionWaypoints).every((w) => isEmptyObject(w));
     const waypoints = useMemo(() => {
@@ -320,6 +323,9 @@ function IOURequestStepDistanceMap({
             activePolicyID,
             privateIsArchived: reportNameValuePairs?.private_isArchived,
             isFromDeepLink: !!initialURL,
+            selfDMReport,
+            policyForMovingExpenses,
+            betas,
         });
     }, [
         iouType,
@@ -349,8 +355,11 @@ function IOURequestStepDistanceMap({
         policyRecentlyUsedCurrencies,
         introSelected,
         activePolicyID,
-        reportNameValuePairs?.private_isArchived,
         initialURL,
+        policyForMovingExpenses,
+        selfDMReport,
+        reportNameValuePairs?.private_isArchived,
+        betas,
     ]);
 
     const getError = () => {
@@ -469,6 +478,7 @@ function IOURequestStepDistanceMap({
         transaction?.transactionID,
         transactionBackup,
         waypoints,
+        parentReportNextStep,
         recentWaypoints,
     ]);
 

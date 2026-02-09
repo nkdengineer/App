@@ -10,6 +10,8 @@ import useOnyx from '@hooks/useOnyx';
 import usePermissions from '@hooks/usePermissions';
 import usePersonalPolicy from '@hooks/usePersonalPolicy';
 import usePolicy from '@hooks/usePolicy';
+import usePolicyForMovingExpenses from '@hooks/usePolicyForMovingExpenses';
+import useSelfDMReport from '@hooks/useSelfDMReport';
 import useShowNotFoundPageInIOUStep from '@hooks/useShowNotFoundPageInIOUStep';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {setGPSTransactionDraftData} from '@libs/actions/IOU';
@@ -56,6 +58,9 @@ function IOURequestStepDistanceGPS({
     const [transactionViolations] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION_VIOLATIONS, {canBeMissing: true});
     const {initialURL} = useInitialURLState();
 
+    const selfDMReport = useSelfDMReport();
+    const {policyForMovingExpenses} = usePolicyForMovingExpenses();
+    const [betas] = useOnyx(ONYXKEYS.BETAS, {canBeMissing: true});
     const isEditing = action === CONST.IOU.ACTION.EDIT;
     const isCreatingNewRequest = !isEditing;
     // eslint-disable-next-line rulesdir/no-negated-variables
@@ -116,6 +121,9 @@ function IOURequestStepDistanceGPS({
             gpsCoordinates,
             gpsDistance: distance,
             isFromDeepLink: !!initialURL,
+            selfDMReport,
+            policyForMovingExpenses,
+            betas,
         });
     };
 
