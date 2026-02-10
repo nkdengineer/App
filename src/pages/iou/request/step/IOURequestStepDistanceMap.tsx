@@ -363,10 +363,11 @@ function IOURequestStepDistanceMap({
         policyRecentlyUsedCurrencies,
         introSelected,
         activePolicyID,
-        initialURL,
+        reportNameValuePairs?.private_isArchived,
         policyForMovingExpenses,
         selfDMReport,
         betas,
+        initialURL,
     ]);
 
     const getError = () => {
