@@ -261,7 +261,6 @@ function IOURequestStepDistanceManual({
             activePolicyID,
             reportNameValuePairs?.private_isArchived,
             initialURL,
-            policyForMovingExpenses,
             isEditingSplit,
             distance,
             splitDraftTransaction,
