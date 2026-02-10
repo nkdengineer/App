@@ -327,7 +327,6 @@ function WalletPage() {
             shouldUseHeadlineHeader
             shouldShowBackButton={shouldUseNarrowLayout}
             shouldDisplaySearchRouter
-            onBackButtonPress={Navigation.popToSidebar}
         />
     );
 
