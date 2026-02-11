@@ -9,7 +9,7 @@ import {setReviewDuplicatesKey} from './actions/Transaction';
 import {isCategoryMissing} from './CategoryUtils';
 import {convertToDisplayString} from './CurrencyUtils';
 import DateUtils from './DateUtils';
-import {getPolicy, hasDynamicExternalWorkflow} from './PolicyUtils';
+import {hasDynamicExternalWorkflow} from './PolicyUtils';
 import {getMostRecentActiveDEWSubmitFailedAction, getOriginalMessage, isDynamicExternalWorkflowSubmitFailedAction, isMessageDeleted, isMoneyRequestAction} from './ReportActionsUtils';
 import {
     hasActionWithErrorsForTransaction,
@@ -80,12 +80,13 @@ const getReviewNavigationRoute = (
     threadReportID: string,
     transaction: OnyxEntry<OnyxTypes.Transaction>,
     duplicates: Array<OnyxEntry<OnyxTypes.Transaction>>,
+    policy: OnyxEntry<OnyxTypes.Policy>,
     policyCategories: OnyxTypes.PolicyCategories | undefined,
     transactionReport: OnyxEntry<OnyxTypes.Report>,
 ) => {
     // Use set method to prevent merging fields from the previous expense
     // (e.g., category, tag, tax) that may be not enabled/available in the new expense's policy.
-    const comparisonResult = compareDuplicateTransactionFields(transaction, duplicates, transactionReport, transaction?.transactionID, policyCategories);
+    const comparisonResult = compareDuplicateTransactionFields(transaction, duplicates, transactionReport, transaction?.transactionID, policy, policyCategories);
     setReviewDuplicatesKey(
         {
             ...comparisonResult.keep,
@@ -188,6 +189,7 @@ function getUniqueActionErrorsForTransaction(reportActions: OnyxTypes.ReportActi
 
 function getTransactionPreviewTextAndTranslationPaths({
     iouReport,
+    policy,
     transaction,
     action,
     violations,
@@ -201,6 +203,7 @@ function getTransactionPreviewTextAndTranslationPaths({
     originalTransaction,
 }: {
     iouReport: OnyxEntry<OnyxTypes.Report>;
+    policy: OnyxEntry<OnyxTypes.Policy>;
     transaction: OnyxEntry<OnyxTypes.Transaction>;
     action: OnyxEntry<OnyxTypes.ReportAction>;
     violations: OnyxTypes.TransactionViolations;
@@ -226,9 +229,6 @@ function getTransactionPreviewTextAndTranslationPaths({
     const hasFieldErrors = hasMissingSmartscanFields(transaction, iouReport);
     const isPaidGroupPolicy = isPaidGroupPolicyUtil(iouReport);
 
-    // This will be fixed as part of https://github.com/Expensify/Expensify/issues/507850
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    const policy = getPolicy(iouReport?.policyID);
     const hasViolationsOfTypeNotice = hasNoticeTypeViolation(transaction, violations, currentUserEmail ?? '', currentUserAccountID, iouReport, policy, true) && isPaidGroupPolicy;
     const hasActionWithErrors = hasActionWithErrorsForTransaction(iouReport?.reportID, transaction, reportActions);
 
@@ -292,7 +292,7 @@ function getTransactionPreviewTextAndTranslationPaths({
     let previewHeaderText: TranslationPathOrText[] = [{translationPath: getExpenseTypeTranslationKey(getTransactionType(transaction))}];
 
     if (isDistanceRequest(transaction)) {
-        if (RBRMessage === undefined && isUnreportedAndHasInvalidDistanceRateTransaction(transaction)) {
+        if (RBRMessage === undefined && isUnreportedAndHasInvalidDistanceRateTransaction(transaction, policy)) {
             RBRMessage = {translationPath: 'violations.customUnitOutOfPolicy'};
         }
     } else if (isTransactionScanning) {
@@ -359,6 +359,7 @@ function getTransactionPreviewTextAndTranslationPaths({
 
 function createTransactionPreviewConditionals({
     iouReport,
+    policy,
     transaction,
     action,
     violations,
@@ -371,6 +372,7 @@ function createTransactionPreviewConditionals({
     reportActions,
 }: {
     iouReport: OnyxEntry<OnyxTypes.Report>;
+    policy: OnyxEntry<OnyxTypes.Policy>;
     transaction: OnyxEntry<OnyxTypes.Transaction> | undefined;
     action: OnyxEntry<OnyxTypes.ReportAction>;
     violations: OnyxTypes.TransactionViolations;
@@ -391,9 +393,6 @@ function createTransactionPreviewConditionals({
     const isApproved = isReportApproved({report: iouReport});
     const isSettlementOrApprovalPartial = !!iouReport?.pendingFields?.partial;
 
-    // This will be fixed as part of https://github.com/Expensify/Expensify/issues/507850
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    const policy = getPolicy(iouReport?.policyID);
     const hasViolationsOfTypeNotice =
         hasNoticeTypeViolation(transaction, violations, currentUserEmail ?? '', currentUserAccountID, iouReport ?? undefined, policy, true) && iouReport && isPaidGroupPolicyUtil(iouReport);
     const hasFieldErrors = hasMissingSmartscanFields(transaction, iouReport);
@@ -412,7 +411,7 @@ function createTransactionPreviewConditionals({
     const shouldShowCategory = !!categoryForDisplay && isReportAPolicyExpenseChat;
 
     const hasAnyViolations =
-        isUnreportedAndHasInvalidDistanceRateTransaction(transaction) ||
+        isUnreportedAndHasInvalidDistanceRateTransaction(transaction, policy) ||
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         hasViolationsOfTypeNotice ||
         hasWarningTypeViolation(transaction, violations, currentUserEmail ?? '', currentUserAccountID, iouReport ?? undefined, policy) ||
