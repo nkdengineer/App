@@ -22,7 +22,7 @@ import Parser from '@libs/Parser';
 import * as PersonalDetailsUtils from '@libs/PersonalDetailsUtils';
 import {getPersonalDetailByEmail} from '@libs/PersonalDetailsUtils';
 import * as PhoneNumber from '@libs/PhoneNumber';
-import {getDefaultApprover, isPolicyAdmin} from '@libs/PolicyUtils';
+import {getDefaultApprover, isControlPolicy, isPolicyAdmin} from '@libs/PolicyUtils';
 import * as ReportActionsUtils from '@libs/ReportActionsUtils';
 import * as ReportUtils from '@libs/ReportUtils';
 import * as FormActions from '@userActions/FormActions';
@@ -1014,7 +1014,7 @@ function importPolicyMembers(policy: OnyxEntry<Policy>, members: PolicyMember[])
     );
     const onyxData = updateImportSpreadsheetData(added, updated);
 
-    const shouldUpdateApprovalMode = members.some((member) => !!member.submitsTo || !!member.forwardsTo);
+    const shouldUpdateApprovalMode = members.some((member) => !!member.submitsTo || !!member.forwardsTo) && isControlPolicy(policy);
     if (shouldUpdateApprovalMode) {
         onyxData.successData?.push({
             onyxMethod: Onyx.METHOD.MERGE,
