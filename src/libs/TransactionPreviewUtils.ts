@@ -264,8 +264,9 @@ function getTransactionPreviewTextAndTranslationPaths({
     }
 
     if (hasFieldErrors && RBRMessage === undefined) {
-        const amountMissing = isAmountMissing(transaction, isExpenseReport(iouReport));
-        const merchantMissing = isExpenseReport(iouReport) && isMerchantMissing(transaction);
+        const isFromExpenseReport = isExpenseReport(iouReport);
+        const amountMissing = isAmountMissing(transaction, isFromExpenseReport);
+        const merchantMissing = isFromExpenseReport && isMerchantMissing(transaction);
         if (amountMissing && merchantMissing) {
             RBRMessage = {translationPath: 'violations.reviewRequired'};
         } else if (merchantMissing) {

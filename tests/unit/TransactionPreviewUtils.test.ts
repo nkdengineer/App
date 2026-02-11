@@ -120,6 +120,25 @@ describe('TransactionPreviewUtils', () => {
             expect(result.RBRMessage.translationPath).toEqual('iou.missingMerchant');
         });
 
+        it('returns missing amount message when amount is missing but merchant is present (expense report with field errors)', () => {
+            const functionArgs = {
+                ...basicProps,
+                iouReport: {...basicProps.iouReport, type: CONST.REPORT.TYPE.EXPENSE},
+                transaction: {
+                    ...basicProps.transaction,
+                    amount: undefined,
+                    modifiedAmount: undefined,
+                    merchant: 'Valid Merchant',
+                    created: '2024-01-01',
+                } as unknown as Transaction,
+                violations: [],
+                originalTransaction: undefined,
+                shouldShowRBR: true,
+            };
+            const result = getTransactionPreviewTextAndTranslationPaths(functionArgs);
+            expect(result.RBRMessage.translationPath).toEqual('iou.missingAmount');
+        });
+
         it('should display showCashOrCard in previewHeaderText', () => {
             const functionArgsWithCardTransaction = {
                 ...basicProps,
