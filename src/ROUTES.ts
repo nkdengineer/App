@@ -1312,13 +1312,22 @@ const ROUTES = {
     },
     MONEY_REQUEST_STEP_MERCHANT: {
         route: ':action/:iouType/merchant/:transactionID/:reportID/:reportActionID?',
-        getRoute: (action: IOUAction, iouType: IOUType, transactionID: string | undefined, reportID: string | undefined, backTo = '', reportActionID?: string) => {
+        getRoute: (action: IOUAction, iouType: IOUType, transactionID: string | undefined, reportID: string | undefined, backTo = '', reportActionID?: string, backToReport?: string) => {
             if (!transactionID || !reportID) {
                 Log.warn('Invalid transactionID or reportID is used to build the MONEY_REQUEST_STEP_MERCHANT route');
             }
 
+            let optionalRoutePart = '';
+
+            if (reportActionID) {
+                optionalRoutePart += `/${reportActionID}`;
+            }
+            if (backToReport) {
+                optionalRoutePart += `?backToReport=${backToReport}`;
+            }
+
             // eslint-disable-next-line no-restricted-syntax -- Legacy route generation
-            return getUrlWithBackToParam(`${action as string}/${iouType as string}/merchant/${transactionID}/${reportID}${reportActionID ? `/${reportActionID}` : ''}`, backTo);
+            return getUrlWithBackToParam(`${action as string}/${iouType as string}/merchant/${transactionID}/${reportID}${optionalRoutePart}`, backTo);
         },
     },
     MONEY_REQUEST_STEP_PARTICIPANTS: {

@@ -339,7 +339,10 @@ function IOURequestStepParticipants({
             }
 
             const firstParticipant = selectedParticipants.current?.at(0);
-            const isMerchantRequired = !!firstParticipant?.isPolicyExpenseChat && isMerchantMissing(initialTransaction) && iouRequestType === CONST.IOU.REQUEST_TYPE.MANUAL;
+            const isMerchantRequired =
+                !!firstParticipant?.isPolicyExpenseChat &&
+                isMerchantMissing(initialTransaction) &&
+                (iouRequestType === CONST.IOU.REQUEST_TYPE.MANUAL || (isMovingTransactionFromTrackExpense && iouRequestType === CONST.IOU.REQUEST_TYPE.TIME));
 
             const iouConfirmationPageRoute = ROUTES.MONEY_REQUEST_STEP_CONFIRMATION.getRoute(
                 action,

@@ -38,7 +38,7 @@ type IOURequestStepMerchantProps = WithWritableReportOrNotFoundProps<typeof SCRE
 
 function IOURequestStepMerchant({
     route: {
-        params: {transactionID, reportID, backTo, action, iouType, reportActionID},
+        params: {transactionID, reportID, backTo, action, iouType, reportActionID, backToReport},
     },
     transaction,
     report,
@@ -95,11 +95,11 @@ function IOURequestStepMerchant({
         }
         shouldNavigateAfterSaveRef.current = false;
         if (!isEditing && !backTo) {
-            Navigation.navigate(ROUTES.MONEY_REQUEST_STEP_CONFIRMATION.getRoute(action, iouType, transactionID, reportID, undefined, undefined, Navigation.getActiveRoute()));
+            Navigation.navigate(ROUTES.MONEY_REQUEST_STEP_CONFIRMATION.getRoute(action, iouType, transactionID, reportID, backToReport, undefined, Navigation.getActiveRoute()));
             return;
         }
         navigateBack();
-    }, [isSaved, navigateBack, action, iouType, transactionID, reportID, backTo, isEditing]);
+    }, [isSaved, navigateBack, action, iouType, transactionID, reportID, backTo, isEditing, backToReport]);
 
     const validate = useCallback(
         (value: FormOnyxValues<typeof ONYXKEYS.FORMS.MONEY_REQUEST_MERCHANT_FORM>) => {
