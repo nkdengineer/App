@@ -76,7 +76,7 @@ function HeaderWithBackButton({
     shouldMinimizeMenuButton = false,
     openParentReportInCurrentTab = false,
 }: HeaderWithBackButtonProps) {
-    const icons = useMemoizedLazyExpensifyIcons(['Download', 'Rotate', 'BackArrow', 'Close']);
+    const icons = useMemoizedLazyExpensifyIcons(['Download', 'Rotate', 'BackArrow', 'Close', 'Crop']);
     const theme = useTheme();
     const styles = useThemeStyles();
     const StyleUtils = useStyleUtils();
@@ -293,7 +293,7 @@ function HeaderWithBackButton({
                                         sentryLabel={CONST.SENTRY_LABEL.HEADER.ROTATE_BUTTON}
                                     >
                                         <Icon
-                                            src={icons.Rotate}
+                                            src={icons.Crop}
                                             fill={iconFill ?? theme.icon}
                                         />
                                     </PressableWithoutFeedback>
