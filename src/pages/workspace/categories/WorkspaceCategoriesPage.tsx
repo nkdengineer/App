@@ -12,6 +12,7 @@ import HeaderWithBackButton from '@components/HeaderWithBackButton';
 import * as Expensicons from '@components/Icon/Expensicons';
 import ImportedFromAccountingSoftware from '@components/ImportedFromAccountingSoftware';
 import LottieAnimations from '@components/LottieAnimations';
+import ReportActionAvatars from '@components/ReportActionAvatars';
 import RenderHTML from '@components/RenderHTML';
 import ScreenWrapper from '@components/ScreenWrapper';
 import ScrollView from '@components/ScrollView';
@@ -41,12 +42,13 @@ import useStyleUtils from '@hooks/useStyleUtils';
 import useThemeStyles from '@hooks/useThemeStyles';
 import {isConnectionInProgress, isConnectionUnverified} from '@libs/actions/connections';
 import {turnOffMobileSelectionMode} from '@libs/actions/MobileSelectionMode';
-import {getDecodedCategoryName} from '@libs/CategoryUtils';
+import {getCategoryApproverRule, getDecodedCategoryName} from '@libs/CategoryUtils';
 import {canUseTouchScreen} from '@libs/DeviceCapabilities';
 import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
 import type {WorkspaceSplitNavigatorParamList} from '@libs/Navigation/types';
 import {isDisablingOrDeletingLastEnabledCategory} from '@libs/OptionsListUtils';
+import {getPersonalDetailByEmail} from '@libs/PersonalDetailsUtils';
 import {getConnectedIntegration, getCurrentConnectionName, hasAccountingConnections, hasTags, isControlPolicy, shouldShowSyncError} from '@libs/PolicyUtils';
 import tokenizedSearch from '@libs/tokenizedSearch';
 import AccessOrNotFoundWrapper from '@pages/workspace/AccessOrNotFoundWrapper';
@@ -91,6 +93,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const canSelectMultiple = isSmallScreenWidth ? isMobileSelectionModeEnabled : true;
     const isControlPolicyWithWideLayout = !shouldUseNarrowLayout && isControlPolicy(policy);
+    const shouldShowApproverColumn = isControlPolicyWithWideLayout && !!policy?.areRulesEnabled;
     const icons = useMemoizedLazyExpensifyIcons(['Download', 'Gear', 'Table']);
     const illustrations = useMemoizedLazyIllustrations(['FolderOpen']);
 
@@ -210,9 +213,22 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                 return acc;
             }
 
+            const categoryApproverEmail = shouldShowApproverColumn
+                ? getCategoryApproverRule(policy?.rules?.approvalRules ?? [], value.name)?.approver ?? ''
+                : '';
+            const approverPersonalDetail = categoryApproverEmail ? getPersonalDetailByEmail(categoryApproverEmail) : undefined;
+            const approverAccountID = approverPersonalDetail?.accountID;
+            const categoryApproverDisplay = shouldShowApproverColumn
+                ? (approverPersonalDetail?.displayName ?? categoryApproverEmail) || translate('common.none')
+                : '';
+
             acc.push({
                 text: getDecodedCategoryName(value.name),
                 keyForList: value.name,
+                ...(shouldShowApproverColumn && {
+                    alternateText: categoryApproverDisplay,
+                    shouldHideAlternateText: true,
+                }),
                 isDisabled,
                 pendingAction: value.pendingAction,
                 errors: value.errors ?? undefined,
@@ -226,6 +242,29 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                                 {value['GL Code']}
                             </Text>
                         </View>
+                        {shouldShowApproverColumn && (
+                            <View style={[glCodeContainerStyle, styles.alignItemsStart, styles.justifyContentCenter]}>
+                                {approverAccountID ? (
+                                    <View style={[styles.flexRow, styles.alignItemsCenter, styles.gap2]}>
+                                        <ReportActionAvatars
+                                            accountIDs={[approverAccountID]}
+                                            fallbackDisplayName={categoryApproverDisplay}
+                                            singleAvatarContainerStyle={[styles.actionAvatar]}
+                                            shouldShowTooltip
+                                            size="small"
+                                        />
+                                        <Text numberOfLines={1}>{categoryApproverDisplay}</Text>
+                                    </View>
+                                ) : (
+                                    <Text
+                                        numberOfLines={1}
+                                        style={glCodeTextStyle}
+                                    >
+                                        {categoryApproverDisplay}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
                         <View style={switchContainerStyle}>
                             <Switch
                                 isOn={value.enabled}
@@ -261,7 +300,24 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
 
             return acc;
         }, []);
-    }, [policyCategories, isOffline, translate, updateWorkspaceCategoryEnabled, policy, isControlPolicyWithWideLayout, glCodeContainerStyle, glCodeTextStyle, switchContainerStyle]);
+    }, [
+        policyCategories,
+        isOffline,
+        translate,
+        updateWorkspaceCategoryEnabled,
+        policy,
+        isControlPolicyWithWideLayout,
+        shouldShowApproverColumn,
+        glCodeContainerStyle,
+        glCodeTextStyle,
+        switchContainerStyle,
+        styles.actionAvatar,
+        styles.alignItemsStart,
+        styles.alignItemsCenter,
+        styles.justifyContentCenter,
+        styles.flexRow,
+        styles.gap2,
+    ]);
 
     const filterCategory = useCallback((categoryOption: ListItem, searchInput: string) => {
         const results = tokenizedSearch([categoryOption], searchInput, (option) => [option.text ?? '', option.alternateText ?? '']);
@@ -300,7 +356,7 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
             return null;
         }
 
-        // Show GL Code column only on wide screens for control policies
+        // Show GL Code and (when workflows enabled) Approver columns only on wide screens for control policies
         if (isControlPolicyWithWideLayout) {
             return (
                 <View style={[styles.flex1, styles.flexRow, styles.justifyContentBetween, styles.pl3]}>
@@ -310,6 +366,13 @@ function WorkspaceCategoriesPage({route}: WorkspaceCategoriesPageProps) {
                     <View style={[styles.flex1, styles.pr16]}>
                         <Text style={[styles.textMicroSupporting, styles.alignSelfStart]}>{translate('workspace.categories.glCode')}</Text>
                     </View>
+                    {shouldShowApproverColumn && (
+                        <View style={[styles.flex1, styles.pr16]}>
+                            <Text style={[styles.textMicroSupporting, styles.alignSelfStart]}>
+                                {translate('workspace.rules.categoryRules.approver')}
+                            </Text>
+                        </View>
+                    )}
                     <View style={[StyleUtils.getMinimumWidth(variables.w72), styles.mr5]}>
                         <Text style={[styles.textMicroSupporting, styles.alignSelfStart]}>{translate('common.enabled')}</Text>
                     </View>
