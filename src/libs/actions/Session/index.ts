@@ -1517,7 +1517,7 @@ function AddWorkEmail(workEmail: string) {
 
     // We need to inspect the response to detect the closed-account error and surface a specific translation key, which API.write cannot do.
     // eslint-disable-next-line rulesdir/no-api-side-effects-method
-    API.makeRequestWithSideEffects(
+    return API.makeRequestWithSideEffects(
         SIDE_EFFECT_REQUEST_COMMANDS.ADD_WORK_EMAIL,
         {workEmail},
         {
@@ -1527,19 +1527,21 @@ function AddWorkEmail(workEmail: string) {
         },
     ).then((response) => {
         if (response?.jsonCode !== CONST.JSON_CODE.EXP_ERROR) {
-            return;
+            return response;
         }
 
         if (response?.message?.includes(CONST.MERGE_ACCOUNT_2FA_ERROR)) {
             Onyx.merge(ONYXKEYS.ONBOARDING_ERROR_MESSAGE_TRANSLATION_KEY, 'onboarding.workEmail2FAError');
-            return;
+            return response;
         }
 
         if (response?.message === CONST.WORK_ACCOUNT_CLOSED_ERROR || response?.title === CONST.WORK_ACCOUNT_CLOSED_ERROR) {
             Onyx.merge(ONYXKEYS.ONBOARDING_ERROR_MESSAGE_TRANSLATION_KEY, 'onboarding.mergeBlockScreen.workAccountClosedSubtitle');
-            return;
+            return response;
         }
+
         Onyx.merge(ONYXKEYS.NVP_ONBOARDING, {isMergingAccountBlocked: true});
+        return response;
     });
 }
 
