@@ -6,9 +6,10 @@ import type {OnSaveParams} from '@pages/settings/Agents/Fields/EditAgentAvatarPa
 import {EditAgentAvatarContent} from '@pages/settings/Agents/Fields/EditAgentAvatarPage';
 import {updateAvatar} from '@userActions/PersonalDetails';
 import EditUserAvatarContent from './EditUserAvatarContent';
+import { useIsAgentAccount } from '@libs/SessionUtils';
 
 function ProfileAvatar() {
-    const isAgentAccount = true;
+    const isAgentAccount = useIsAgentAccount();
 
     const currentUserPersonalDetails = useCurrentUserPersonalDetails();
     if (isAgentAccount) {
