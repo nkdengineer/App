@@ -342,20 +342,6 @@ export default createOnyxDerivedValueConfig({
                     actionTargetReportActionID = actionGreenTargetReportActionID;
                 }
 
-                if (report?.parentReportActionID && chatReport?.reportID && (needsParentChatErrorPropagation || brickRoadStatus === CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR)) {
-                    if (parentActionTargetReportActionIDs.has(chatReport.reportID) && parentActionTargetReportActionIDs.get(chatReport.reportID)) {
-                        const currentParentActionTargetReportActionID = parentActionTargetReportActionIDs.get(chatReport.reportID) ?? "-1";
-                        const currentParentActionTargetReportAction = reportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${chatReport.reportID}`]?.[currentParentActionTargetReportActionID];
-                        const parentActionTargetReportActionID = report?.parentReportActionID;
-                        const parentActionTargetReportAction = reportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report?.parentReportID}`]?.[parentActionTargetReportActionID];
-                        if ((parentActionTargetReportAction?.created ?? '') < (currentParentActionTargetReportAction?.created ?? '')) {
-                            parentActionTargetReportActionIDs.set(chatReport.reportID, parentActionTargetReportActionID);
-                        }
-                    } else {
-                        parentActionTargetReportActionIDs.set(chatReport.reportID, report?.parentReportActionID);
-                    }
-                }
-
                 acc[report.reportID] = {
                     reportName: report
                         ? computeReportName({
@@ -406,6 +392,19 @@ export default createOnyxDerivedValueConfig({
                 report.reportID !== report.chatReportID &&
                 (attributes?.needsParentChatErrorPropagation || attributes?.brickRoadStatus === CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR)
             ) {
+                if (report?.parentReportActionID && report.chatReportID) {
+                    if (parentActionTargetReportActionIDs.has(report.chatReportID) && parentActionTargetReportActionIDs.get(report.chatReportID)) {
+                        const currentParentActionTargetReportActionID = parentActionTargetReportActionIDs.get(report.chatReportID) ?? "-1";
+                        const currentParentActionTargetReportAction = reportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report.chatReportID}`]?.[currentParentActionTargetReportActionID];
+                        const parentActionTargetReportActionID = report?.parentReportActionID;
+                        const parentActionTargetReportAction = reportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report?.parentReportID}`]?.[parentActionTargetReportActionID];
+                        if ((parentActionTargetReportAction?.created ?? '') < (currentParentActionTargetReportAction?.created ?? '')) {
+                            parentActionTargetReportActionIDs.set(report.chatReportID, parentActionTargetReportActionID);
+                        }
+                    } else {
+                        parentActionTargetReportActionIDs.set(report.chatReportID, report?.parentReportActionID);
+                    }
+                }
                 chatReportIDsWithErrors.add(report.chatReportID);
             }
         }
@@ -416,6 +415,7 @@ export default createOnyxDerivedValueConfig({
                 continue;
             }
 
+            console.log("parentActionTargetReportActionIDs", parentActionTargetReportActionIDs.get(chatReportID));
             // Clone the entry before mutating — it may be a reference carried over from
             // currentValue.reports that wasn't recomputed in this incremental run.
             reportAttributes[chatReportID] = {

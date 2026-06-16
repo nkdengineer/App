@@ -146,9 +146,15 @@ export default function useReportUnreadMessageScrollTracking({
         // Track whether the action badge target is above the viewport (i.e., not visible and at a higher index in the inverted list)
         const badgeTargetIndex = ref.current.actionBadgeTargetIndex;
         if (badgeTargetIndex !== -1) {
+            // Index coordinates can be transiently stale: when a new action is prepended, actionBadgeTargetIndex
+            // reflects the new data while previousViewableItems still holds pre-insertion indexes (FlashList hasn't
+            // emitted the post-insert viewability event yet). Anchor the "is the target visible" check on the stable
+            // reportActionID so an index shift can't briefly flag a still-visible target as above the viewport.
+            const badgeTargetID = ref.current.actionBadgeTargetReportActionID;
+            const isTargetVisible = !!badgeTargetID && viewableItems.some((viewableItem) => (viewableItem.item as OnyxTypes.ReportAction | undefined)?.reportActionID === badgeTargetID);
             // In an inverted list, higher indexes are "above" (older messages). The target is above the viewport
-            // when its index is greater than the max visible index.
-            const isAbove = isInverted ? badgeTargetIndex > maxIndex : badgeTargetIndex < minIndex;
+            // when it is not visible and its index is greater than the max visible index.
+            const isAbove = !isTargetVisible && (isInverted ? badgeTargetIndex > maxIndex : badgeTargetIndex < minIndex);
             setIsActionBadgeAboveViewport(isAbove);
         } else {
             setIsActionBadgeAboveViewport(false);
@@ -172,10 +178,8 @@ export default function useReportUnreadMessageScrollTracking({
     // When actionBadgeTargetIndex changes, recalculate visibility
     useEffect(() => {
         ref.current.actionBadgeTargetIndex = actionBadgeTargetIndex;
-        if (ref.current.actionBadgeTargetReportActionID !== actionBadgeTargetReportActionID) {
-            onViewableItemsChanged({viewableItems: ref.current.previousViewableItems, changed: []});
-            ref.current.actionBadgeTargetReportActionID = actionBadgeTargetReportActionID;
-        }
+        ref.current.actionBadgeTargetReportActionID = actionBadgeTargetReportActionID;
+        onViewableItemsChanged({viewableItems: ref.current.previousViewableItems, changed: []});
     }, [onViewableItemsChanged, actionBadgeTargetIndex, actionBadgeTargetReportActionID]);
 
     return {
