@@ -257,6 +257,7 @@ export default createOnyxDerivedValueConfig({
             }
         }
 
+        const parentActionTargetReportActionIDs = new Map<string, string>();
         const reportAttributes = dataToIterate.reduce<ReportAttributesDerivedValue['reports']>(
             (acc, key) => {
                 // source value sends partial data, so we need an entire report object to do computations
@@ -341,6 +342,20 @@ export default createOnyxDerivedValueConfig({
                     actionTargetReportActionID = actionGreenTargetReportActionID;
                 }
 
+                if (report?.parentReportActionID && chatReport?.reportID && (needsParentChatErrorPropagation || brickRoadStatus === CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR)) {
+                    if (parentActionTargetReportActionIDs.has(chatReport.reportID) && parentActionTargetReportActionIDs.get(chatReport.reportID)) {
+                        const currentParentActionTargetReportActionID = parentActionTargetReportActionIDs.get(chatReport.reportID) ?? "-1";
+                        const currentParentActionTargetReportAction = reportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${chatReport.reportID}`]?.[currentParentActionTargetReportActionID];
+                        const parentActionTargetReportActionID = report?.parentReportActionID;
+                        const parentActionTargetReportAction = reportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report?.parentReportID}`]?.[parentActionTargetReportActionID];
+                        if ((parentActionTargetReportAction?.created ?? '') < (currentParentActionTargetReportAction?.created ?? '')) {
+                            parentActionTargetReportActionIDs.set(chatReport.reportID, parentActionTargetReportActionID);
+                        }
+                    } else {
+                        parentActionTargetReportActionIDs.set(chatReport.reportID, report?.parentReportActionID);
+                    }
+                }
+
                 acc[report.reportID] = {
                     reportName: report
                         ? computeReportName({
@@ -407,6 +422,7 @@ export default createOnyxDerivedValueConfig({
                 ...reportAttributes[chatReportID],
                 brickRoadStatus: CONST.BRICK_ROAD_INDICATOR_STATUS.ERROR,
                 actionBadge: CONST.REPORT.ACTION_BADGE.FIX,
+                actionTargetReportActionID: parentActionTargetReportActionIDs.get(chatReportID) ?? undefined,
             };
         }
 

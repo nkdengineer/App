@@ -61,6 +61,9 @@ type UseReportActionsScrollParams = {
     /** The index of the action badge target in the rendered actions list (-1 if none) */
     actionBadgeTargetIndex: number;
 
+    /** The reportActionID of the action badge target (-1 index counterpart, used for shift-invariant visibility checks) */
+    actionBadgeTargetReportActionID?: string;
+
     /** Full sorted report actions for collapsing stale pagination after a live-tail jump */
     sortedAllReportActionsForPagination: OnyxTypes.ReportAction[];
 
@@ -123,6 +126,7 @@ function useReportActionsScroll({
     hasNewerActions,
     draftAutoScrollKey,
     actionBadgeTargetIndex,
+    actionBadgeTargetReportActionID,
     sortedAllReportActionsForPagination,
     treatAsNoPaginationAnchor,
     setTreatAsNoPaginationAnchor,
@@ -173,6 +177,7 @@ function useReportActionsScroll({
                 scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
             },
             actionBadgeTargetIndex,
+            actionBadgeTargetReportActionID,
         });
 
     const {isScrollToBottomEnabled, setIsScrollToBottomEnabled, completeLiveTailPruneAfterScrollToBottom} = useReportActionsNewActionLiveTail({

@@ -299,12 +299,14 @@ function ReportActionsList({
         hasNewerActions,
         draftAutoScrollKey,
         actionBadgeTargetIndex,
+        actionBadgeTargetReportActionID: reportAttributes?.actionTargetReportActionID,
         sortedAllReportActionsForPagination,
         treatAsNoPaginationAnchor,
         setTreatAsNoPaginationAnchor,
     });
 
     const trackScrollPositionAndThreshold = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        console.log('scroll triggered');
         trackVerticalScrolling(event);
         setHasScrolledOverThreshold(event.nativeEvent.contentOffset.y >= CONST.REPORT.ACTIONS.ACTION_VISIBLE_THRESHOLD);
         onScroll?.(event);

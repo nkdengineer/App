@@ -3,6 +3,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import type {RefObject} from 'react';
 import type {NativeScrollEvent, NativeSyntheticEvent, ViewToken} from 'react-native';
 import CONST from '@src/CONST';
+import type * as OnyxTypes from '@src/types/onyx';
 
 type Args = {
     /** The report ID */
@@ -28,6 +29,9 @@ type Args = {
 
     /** The index of the action badge target report action in the sorted visible actions list (-1 if none) */
     actionBadgeTargetIndex?: number;
+
+    /** The reportActionID of the action badge target. Used for an index-shift-invariant visibility check. */
+    actionBadgeTargetReportActionID?: string;
 };
 
 export default function useReportUnreadMessageScrollTracking({
@@ -39,6 +43,7 @@ export default function useReportUnreadMessageScrollTracking({
     unreadMarkerReportActionIndex,
     isInverted,
     actionBadgeTargetIndex = -1,
+    actionBadgeTargetReportActionID,
 }: Args) {
     const [isFloatingMessageCounterVisible, setIsFloatingMessageCounterVisible] = useState(false);
     const [isActionBadgeAboveViewport, setIsActionBadgeAboveViewport] = useState(false);
@@ -50,6 +55,7 @@ export default function useReportUnreadMessageScrollTracking({
         isFocused: boolean;
         onUnreadActionVisible: () => void;
         actionBadgeTargetIndex: number;
+        actionBadgeTargetReportActionID: string | undefined;
     }>({
         reportID,
         unreadMarkerReportActionIndex,
@@ -57,6 +63,7 @@ export default function useReportUnreadMessageScrollTracking({
         isFocused: true,
         onUnreadActionVisible,
         actionBadgeTargetIndex,
+        actionBadgeTargetReportActionID,
     });
     // We want to save the updated value on ref to use it in onViewableItemsChanged
     // because FlatList requires the callback to be stable and we cannot add a dependency on the useCallback.
@@ -165,8 +172,11 @@ export default function useReportUnreadMessageScrollTracking({
     // When actionBadgeTargetIndex changes, recalculate visibility
     useEffect(() => {
         ref.current.actionBadgeTargetIndex = actionBadgeTargetIndex;
-        onViewableItemsChanged({viewableItems: ref.current.previousViewableItems, changed: []});
-    }, [onViewableItemsChanged, actionBadgeTargetIndex]);
+        if (ref.current.actionBadgeTargetReportActionID !== actionBadgeTargetReportActionID) {
+            onViewableItemsChanged({viewableItems: ref.current.previousViewableItems, changed: []});
+            ref.current.actionBadgeTargetReportActionID = actionBadgeTargetReportActionID;
+        }
+    }, [onViewableItemsChanged, actionBadgeTargetIndex, actionBadgeTargetReportActionID]);
 
     return {
         isFloatingMessageCounterVisible,
