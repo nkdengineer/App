@@ -8,11 +8,11 @@ import HeaderWithBackButton from '@components/HeaderWithBackButton';
 import MenuItem from '@components/MenuItem';
 import MenuItemWithTopDescription from '@components/MenuItemWithTopDescription';
 import RenderHTML from '@components/RenderHTML';
+import SafeAreaPaddingWrapper from '@components/SafeAreaPaddingWrapper';
 import ScreenWrapper from '@components/ScreenWrapper';
 import ScrollView from '@components/ScrollView';
 import Text from '@components/Text';
 import UserPill from '@components/UserPill';
-import useBottomSafeSafeAreaPaddingStyle from '@hooks/useBottomSafeSafeAreaPaddingStyle';
 import {useCurrencyListActions} from '@hooks/useCurrencyList';
 import {useMemoizedLazyExpensifyIcons} from '@hooks/useLazyAsset';
 import useLocalize from '@hooks/useLocalize';
@@ -174,8 +174,6 @@ function WorkspaceWorkflowsApprovalsApprovalLimitPage({policy, isLoadingReportDa
         Navigation.navigate(ROUTES.WORKSPACE_WORKFLOWS_APPROVALS_APPROVER_CHANGE.getRoute(policyID, approverIndex));
     };
 
-    const buttonContainerStyle = useBottomSafeSafeAreaPaddingStyle({addBottomSafeAreaPadding: true, style: [styles.mh5, styles.mb5]});
-
     const shouldShowRemoveLimitRow = isEditFlow && (hasAmount || hasApprover);
 
     return (
@@ -291,22 +289,29 @@ function WorkspaceWorkflowsApprovalsApprovalLimitPage({policy, isLoadingReportDa
                         </View>
                     </ScrollView>
 
-                    <View style={buttonContainerStyle}>
-                        {!isEditFlow && (
-                            <Button
-                                large
-                                text={translate('workflowsApprovalLimitPage.skip')}
-                                onPress={handleSkip}
-                                style={styles.mb3}
-                            />
+                    <SafeAreaPaddingWrapper
+                        addBottomSafeAreaPadding
+                        style={[styles.mh5, styles.mb5]}
+                    >
+                        {(buttonContainerStyle) => (
+                            <View style={buttonContainerStyle}>
+                                {!isEditFlow && (
+                                    <Button
+                                        large
+                                        text={translate('workflowsApprovalLimitPage.skip')}
+                                        onPress={handleSkip}
+                                        style={styles.mb3}
+                                    />
+                                )}
+                                <Button
+                                    large
+                                    success
+                                    text={isEditFlow ? translate('common.save') : translate('workflowsApprovalLimitPage.next')}
+                                    onPress={handleSubmit}
+                                />
+                            </View>
                         )}
-                        <Button
-                            large
-                            success
-                            text={isEditFlow ? translate('common.save') : translate('workflowsApprovalLimitPage.next')}
-                            onPress={handleSubmit}
-                        />
-                    </View>
+                    </SafeAreaPaddingWrapper>
                 </FullPageNotFoundView>
             </ScreenWrapper>
         </AccessOrNotFoundWrapper>

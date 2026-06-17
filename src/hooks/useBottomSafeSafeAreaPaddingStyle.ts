@@ -90,3 +90,4 @@ function useBottomSafeSafeAreaPaddingStyle({
 }
 
 export default useBottomSafeSafeAreaPaddingStyle;
+export type {UseBottomSafeAreaPaddingStyleParams};
