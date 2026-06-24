@@ -24,6 +24,9 @@ type WideRHPStateContextType = {
 
     // Whether the currently focused route is inside the super wide RHP set
     isSuperWideRHPFocused: boolean;
+
+    // Whether the width of the wide RHP is equal to the width of the super wide RHP
+    isWideRHPWidthEqualToSuperWideRHPWidth: boolean;
 };
 
 type WideRHPActionsContextType = {

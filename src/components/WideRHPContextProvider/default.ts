@@ -9,6 +9,7 @@ const defaultWideRHPStateContextValue: WideRHPStateContextType = {
     shouldRenderTertiaryOverlay: false,
     isWideRHPFocused: false,
     isSuperWideRHPFocused: false,
+    isWideRHPWidthEqualToSuperWideRHPWidth: false,
 };
 
 const defaultWideRHPActionsContextValue: WideRHPActionsContextType = {

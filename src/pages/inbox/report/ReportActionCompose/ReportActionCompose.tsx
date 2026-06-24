@@ -21,13 +21,16 @@ import ComposerTypingIndicator from './ComposerTypingIndicator';
 type ReportActionComposeProps = {
     /** Report ID */
     reportID: string;
+
+    /** Whether to show the offline indicator */
+    shouldShowOfflineIndicator?: boolean;
 };
 
-function ReportActionCompose({reportID}: ReportActionComposeProps) {
+function ReportActionCompose({reportID, shouldShowOfflineIndicator = false}: ReportActionComposeProps) {
     return (
         <ComposerProvider reportID={reportID}>
             <ComposerInputArea>
-                <ComposerDefaultFooter />
+                <ComposerDefaultFooter shouldShowOfflineIndicator={shouldShowOfflineIndicator} />
             </ComposerInputArea>
         </ComposerProvider>
     );

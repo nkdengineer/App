@@ -105,6 +105,7 @@ function WideRHPContextProvider({children}: React.PropsWithChildren) {
     // Same as above but for Super Wide RHP
     const [allSuperWideRHPRouteKeys, setAllSuperWideRHPRouteKeys] = useState<string[]>([]);
     const [superWideRHPRouteKeys, setSuperWideRHPRouteKeys] = useState<string[]>([]);
+    const [isWideRHPWidthEqualToSuperWideRHPWidth, setIsWideRHPWidthEqualToSuperWideRHPWidth] = useState(wideRHPWidth === superWideRHPWidth);
 
     // Report IDs that should be displayed in Wide/Super Wide RHP
     const [expenseReportIDs, setExpenseReportIDs] = useState<Set<string>>(new Set());
@@ -292,6 +293,7 @@ function WideRHPContextProvider({children}: React.PropsWithChildren) {
             modalStackOverlayWideRHPPositionLeft.setValue(newSuperWideRHPWidth - newWideRHPWidth);
             modalStackOverlaySuperWideRHPPositionLeft.setValue(newSuperWideRHPWidth - singleRHPWidth);
             animatedSuperWideRHPWidth.setValue(newSuperWideRHPWidth);
+            setIsWideRHPWidthEqualToSuperWideRHPWidth(newWideRHPWidth === newSuperWideRHPWidth);
         };
 
         // Set initial value
@@ -315,6 +317,7 @@ function WideRHPContextProvider({children}: React.PropsWithChildren) {
         shouldRenderTertiaryOverlay,
         isWideRHPFocused,
         isSuperWideRHPFocused,
+        isWideRHPWidthEqualToSuperWideRHPWidth,
     };
 
     // Because of the React Compiler we don't need to memoize it manually

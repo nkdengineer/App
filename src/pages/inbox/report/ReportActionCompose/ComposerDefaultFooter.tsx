@@ -1,18 +1,16 @@
 import React from 'react';
 import OfflineIndicator from '@components/OfflineIndicator';
-import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useThemeStyles from '@hooks/useThemeStyles';
 import ComposerExceededLength from './ComposerExceededLength';
 import ComposerFooter from './ComposerFooter';
 import ComposerTypingIndicator from './ComposerTypingIndicator';
 
-function ComposerDefaultFooter() {
+function ComposerDefaultFooter({shouldShowOfflineIndicator}: {shouldShowOfflineIndicator: boolean}) {
     const styles = useThemeStyles();
-    const {shouldUseNarrowLayout} = useResponsiveLayout();
 
     return (
         <ComposerFooter>
-            {!shouldUseNarrowLayout && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
+            {shouldShowOfflineIndicator && <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />}
             <ComposerTypingIndicator />
             <ComposerExceededLength />
         </ComposerFooter>

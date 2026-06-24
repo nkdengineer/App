@@ -9,6 +9,7 @@ import Banner from '@components/Banner';
 import BlockedReportFooter from '@components/BlockedReportFooter';
 import OfflineIndicator from '@components/OfflineIndicator';
 import SwipeableView from '@components/SwipeableView';
+import {useWideRHPState} from '@components/WideRHPContextProvider';
 import useIsAnonymousUser from '@hooks/useIsAnonymousUser';
 import useIsReportReadyToDisplay from '@hooks/useIsReportReadyToDisplay';
 import {useMemoizedLazyExpensifyIcons} from '@hooks/useLazyAsset';
@@ -53,8 +54,15 @@ function ReportFooter() {
     const styles = useThemeStyles();
     const {translate} = useLocalize();
     const {isOffline} = useNetwork();
-    const {shouldUseNarrowLayout} = useResponsiveLayout();
     const expensifyIcons = useMemoizedLazyExpensifyIcons(['Lightbulb']);
+
+    const {shouldUseNarrowLayout, isSmallScreenWidth} = useResponsiveLayout();
+    const {superWideRHPRouteKeys, wideRHPRouteKeys, isWideRHPWidthEqualToSuperWideRHPWidth} = useWideRHPState();
+
+    const isSuperWide = !!route?.key && superWideRHPRouteKeys.includes(route.key);
+    const isWide = !!route?.key && wideRHPRouteKeys.includes(route.key);
+    const shouldShowOfflineIndicatorInWideRHP = isWide && isWideRHPWidthEqualToSuperWideRHPWidth && !isSmallScreenWidth;
+    const shouldShowOfflineIndicator = !shouldUseNarrowLayout || (isSuperWide && !isSmallScreenWidth) || shouldShowOfflineIndicatorInWideRHP;
 
     const [report] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${reportIDFromRoute}`);
 
@@ -95,7 +103,10 @@ function ReportFooter() {
     if (!shouldHideComposer) {
         const composer = (
             <SwipeableView onSwipeDown={Keyboard.dismiss}>
-                <ReportActionCompose reportID={reportIDFromRoute} />
+                <ReportActionCompose
+                    reportID={reportIDFromRoute}
+                    shouldShowOfflineIndicator={shouldShowOfflineIndicator}
+                />
             </SwipeableView>
         );
         return (
@@ -117,7 +128,7 @@ function ReportFooter() {
         return (
             <View style={[styles.chatFooter, styles.mt4, shouldUseNarrowLayout && styles.mb5]}>
                 <ArchivedReportFooter reportID={reportIDFromRoute} />
-                {!shouldUseNarrowLayout && (
+                {shouldShowOfflineIndicator && (
                     <View style={styles.offlineIndicatorContainer}>
                         <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />
                     </View>
@@ -131,7 +142,7 @@ function ReportFooter() {
         return (
             <View style={[styles.chatFooter, styles.mt4, shouldUseNarrowLayout && styles.mb5]}>
                 <AnonymousReportFooter reportID={reportIDFromRoute} />
-                {!shouldUseNarrowLayout && (
+                {shouldShowOfflineIndicator && (
                     <View style={styles.offlineIndicatorContainer}>
                         <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />
                     </View>
@@ -145,7 +156,7 @@ function ReportFooter() {
         return (
             <View style={[styles.chatFooter, styles.mt4, shouldUseNarrowLayout && styles.mb5]}>
                 <BlockedReportFooter />
-                {!shouldUseNarrowLayout && (
+                {shouldShowOfflineIndicator && (
                     <View style={styles.offlineIndicatorContainer}>
                         <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />
                     </View>
@@ -159,7 +170,7 @@ function ReportFooter() {
         return (
             <View style={[styles.chatFooter, styles.mt4, shouldUseNarrowLayout && styles.mb5]}>
                 <SystemChatReportFooterMessage />
-                {!shouldUseNarrowLayout && (
+                {shouldShowOfflineIndicator && (
                     <View style={styles.offlineIndicatorContainer}>
                         <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />
                     </View>
@@ -187,7 +198,7 @@ function ReportFooter() {
                     icon={expensifyIcons.Lightbulb}
                     shouldShowIcon
                 />
-                {!shouldUseNarrowLayout && (
+                {shouldShowOfflineIndicator && (
                     <View style={styles.offlineIndicatorContainer}>
                         <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />
                     </View>
@@ -211,7 +222,7 @@ function ReportFooter() {
                     icon={expensifyIcons.Lightbulb}
                     shouldShowIcon
                 />
-                {!shouldUseNarrowLayout && (
+                {shouldShowOfflineIndicator && (
                     <View style={styles.offlineIndicatorContainer}>
                         <OfflineIndicator containerStyles={[styles.chatItemComposeSecondaryRow]} />
                     </View>
