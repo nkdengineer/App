@@ -10,21 +10,29 @@ function useShouldRenderOverlay(condition: boolean, overlayProgress: Animated.Va
     const [shouldRenderOverlay, setShouldRenderOverlay] = useState(false);
 
     useEffect(() => {
+        let animation: Animated.CompositeAnimation | undefined;
         if (condition) {
             setShouldRenderOverlay(true);
-            Animated.timing(overlayProgress, {
+            animation = Animated.timing(overlayProgress, {
                 toValue: 1,
                 duration: OVERLAY_TIMING_DURATION,
                 useNativeDriver: false,
-            }).start();
+            });
+            animation.start();
         } else {
-            Animated.timing(overlayProgress, {
+            animation = Animated.timing(overlayProgress, {
                 toValue: 0,
                 duration: OVERLAY_TIMING_DURATION,
                 useNativeDriver: false,
-            }).start(() => {
+            });
+
+            animation.start(() => {
                 setShouldRenderOverlay(false);
             });
+        }
+
+        return () => {
+            animation?.stop();
         }
     }, [condition, overlayProgress]);
 

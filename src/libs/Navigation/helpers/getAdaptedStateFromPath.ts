@@ -85,6 +85,7 @@ function getSearchScreenNameForRoute(route: NavigationPartialRoute): string {
 function getMatchingFullScreenRoute(route: NavigationPartialRoute) {
     const isDynamicScreen = isDynamicRouteScreen(route.name as Screen);
 
+    console.trace("ewrw");
     // Check for backTo param. One screen with different backTo value may need different screens visible under the overlay.
     // Dynamic screens are skipped here because they never carry their own backTo - they only
     // inherit it from the screen underneath. Letting backTo dictate the full-screen route for
@@ -260,6 +261,35 @@ function getMatchingFullScreenRoute(route: NavigationPartialRoute) {
     return undefined;
 }
 
+function getMatchingRHPScreenRoute(route: NavigationPartialRoute) {
+    const isDynamicScreen = isDynamicRouteScreen(route.name as Screen);
+
+    // Check for backTo param. One screen with different backTo value may need different screens visible under the overlay.
+    // Dynamic screens are skipped here because they never carry their own backTo - they only
+    // inherit it from the screen underneath. Letting backTo dictate the full-screen route for
+    // a dynamic screen would resolve the wrong page.
+    if (isRouteWithBackToParam(route) && !isDynamicScreen) {
+        const stateForBackTo = getStateFromPath(route.params.backTo as RoutePath);
+
+        // This may happen if the backTo url is invalid.
+        const lastRoute = stateForBackTo?.routes.at(-1);
+        if (!stateForBackTo || !lastRoute || lastRoute.name === SCREENS.NOT_FOUND) {
+            return undefined;
+        }
+
+        const isLastRouteRHPReport = lastRoute.name === NAVIGATORS.RIGHT_MODAL_NAVIGATOR && lastRoute.state?.routes?.at(-1)?.name === SCREENS.RIGHT_MODAL.EXPENSE_REPORT;
+
+        // If the state for back to last route is a full screen route, we can use it
+        if (isLastRouteRHPReport) {
+            return lastRoute;
+        }
+
+        return undefined;
+    }
+
+    return undefined;
+}
+
 // If there is no particular matching route defined, we want to get the default route.
 // It is the reports split navigator with report. If the reportID is defined in the focused route, we want to use it for the default report.
 // This is separated from getMatchingFullScreenRoute because we want to use it only for the initial state.
@@ -350,10 +380,21 @@ function getAdaptedState(state: PartialState<NavigationState<RootNavigatorParamL
 
         if (focusedRoute) {
             const matchingRootRoute = getMatchingFullScreenRoute(focusedRoute);
+            const matchingRHPRoute = getMatchingRHPScreenRoute(focusedRoute);
+            let lastRoute = currentState.routes.at(-1);
+            if (matchingRHPRoute?.state?.routes && lastRoute) {
+                lastRoute = {
+                    ...lastRoute,
+                    state: {
+                        ...lastRoute.state,
+                        ...getRoutesWithIndex([...(matchingRHPRoute?.state?.routes ?? []), ...(lastRoute.state?.routes ?? [])]),
+                    },
+                };
+            }
 
             // If there is a matching root route, add it to the state.
             if (matchingRootRoute) {
-                return getRoutesWithIndex([matchingRootRoute, ...currentState.routes]);
+                return getRoutesWithIndex([matchingRootRoute, ...currentState.routes.slice(0, -1), lastRoute]);
             }
         }
 
@@ -433,4 +474,4 @@ const getAdaptedStateFromPath: GetAdaptedStateFromPath = (path, options, shouldR
 };
 
 export default getAdaptedStateFromPath;
-export {getMatchingFullScreenRoute, isFullScreenName};
+export {getMatchingFullScreenRoute, isFullScreenName, getMatchingRHPScreenRoute};
