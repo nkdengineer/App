@@ -169,6 +169,7 @@ function EditAgentAvatarContent({accountID, fallbackRoute, onSave, initialPreset
                     <AttachmentPicker
                         type={CONST.ATTACHMENT_PICKER_TYPE.IMAGE}
                         shouldValidateImage={false}
+                        shouldConvertSvgToPng
                     >
                         {({openPicker}) => (
                             <Button

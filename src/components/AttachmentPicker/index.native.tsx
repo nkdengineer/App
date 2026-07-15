@@ -10,6 +10,7 @@ import useStyleUtils from '@hooks/useStyleUtils';
 import useTheme from '@hooks/useTheme';
 import useThemeStyles from '@hooks/useThemeStyles';
 
+import convertSvgToPng from '@libs/fileDownload/convertSvgToPng';
 import {cleanFileName, showCameraPermissionsAlert, verifyFileFormat} from '@libs/fileDownload/FileUtils';
 import Log from '@libs/Log';
 import moveReceiptToDurableStorage from '@libs/moveReceiptToDurableStorage';
@@ -158,6 +159,7 @@ function AttachmentPicker({
     children,
     shouldHideCameraOption = false,
     shouldValidateImage = true,
+    shouldConvertSvgToPng = false,
     shouldHideGalleryOption = false,
     acceptedFileTypes,
     fileLimit = 1,
@@ -411,23 +413,40 @@ function AttachmentPicker({
                 return Promise.resolve();
             }
 
-            const filesToProcess = attachments.map((fileData) => {
+            const filesToProcess = attachments.map(async (fileData) => {
                 if (!fileData) {
-                    return Promise.resolve(null);
+                    return null;
                 }
 
                 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-                const fileDataName = ('fileName' in fileData && fileData.fileName) || ('name' in fileData && fileData.name) || '';
+                const initialFileDataName = ('fileName' in fileData && fileData.fileName) || ('name' in fileData && fileData.name) || '';
                 const fileDataUri = ('uri' in fileData && fileData.uri) || '';
 
-                const fileDataObject: FileResponse = {
-                    name: fileDataName ?? '',
+                let fileDataObject: FileResponse = {
+                    name: initialFileDataName ?? '',
                     uri: fileDataUri,
                     size: ('size' in fileData && fileData.size) || ('fileSize' in fileData && fileData.fileSize) || null,
                     type: fileData.type ?? '',
                     width: ('width' in fileData && fileData.width) || undefined,
                     height: ('height' in fileData && fileData.height) || undefined,
                 };
+                /* eslint-enable @typescript-eslint/prefer-nullish-coalescing */
+
+                // Rasterize SVGs to PNG (when enabled) so the downstream image handling and crop pipeline can process them.
+                // convertSvgToPng returns the original file unchanged for non-SVG files or when conversion fails.
+                if (shouldConvertSvgToPng) {
+                    const convertedFile = await convertSvgToPng(fileDataObject);
+                    fileDataObject = {
+                        name: convertedFile.name ?? fileDataObject.name,
+                        uri: convertedFile.uri ?? fileDataObject.uri,
+                        type: convertedFile.type ?? fileDataObject.type,
+                        size: convertedFile.size ?? fileDataObject.size,
+                        width: ('width' in convertedFile ? convertedFile.width : undefined) ?? fileDataObject.width,
+                        height: ('height' in convertedFile ? convertedFile.height : undefined) ?? fileDataObject.height,
+                    };
+                }
+
+                const fileDataName = fileDataObject.name;
 
                 if (!shouldValidateImage && fileDataName && Str.isImage(fileDataName)) {
                     return getDataForUpload(fileDataObject)
@@ -483,7 +502,7 @@ function AttachmentPicker({
                     }
                 });
         },
-        [handleImageProcessingError, shouldValidateImage, showGeneralAlert, showImageCorruptionAlert],
+        [handleImageProcessingError, shouldConvertSvgToPng, shouldValidateImage, showGeneralAlert, showImageCorruptionAlert],
     );
 
     /**

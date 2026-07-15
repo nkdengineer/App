@@ -139,6 +139,7 @@ function AvatarPreview({selected, isRemoved, onImageRemoved, avatarCaptureRef, i
             <AttachmentPicker
                 type={CONST.ATTACHMENT_PICKER_TYPE.IMAGE}
                 shouldValidateImage={false}
+                shouldConvertSvgToPng
             >
                 {({openPicker}) => {
                     const menuItems = createMenuItems(openPicker);

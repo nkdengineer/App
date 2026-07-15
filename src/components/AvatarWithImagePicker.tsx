@@ -223,6 +223,7 @@ function AvatarWithImagePicker({
                     type={CONST.ATTACHMENT_PICKER_TYPE.IMAGE}
                     // We need to skip the validation in AttachmentPicker because it is handled in this component itself
                     shouldValidateImage={false}
+                    shouldConvertSvgToPng
                 >
                     {({openPicker}) => {
                         const menuItems = createMenuItems(openPicker);

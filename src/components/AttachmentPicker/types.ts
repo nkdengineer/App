@@ -53,6 +53,9 @@ type AttachmentPickerProps = {
     /** Whether to validate the image and show the alert or not. */
     shouldValidateImage?: boolean;
 
+    /** Whether to convert selected SVG files to PNG before handing them off (native only, e.g. the avatar flow). */
+    shouldConvertSvgToPng?: boolean;
+
     /** Allow multiple file selection */
     allowMultiple?: boolean;
 
