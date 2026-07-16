@@ -10,19 +10,26 @@ type TabSwitchGuard = {
     getHasUnsavedChanges: () => boolean;
     onDiscard: () => void | Promise<void>;
     onCancel?: () => void;
+    onVisibilityChange?: (isVisible: boolean) => void;
 };
 
 type RegisterTabSwitchGuard = (guard: TabSwitchGuard) => () => void;
 
 const TabSwitchGuardContext = createContext<RegisterTabSwitchGuard | null>(null);
 
-function useRegisterTabSwitchGuard(tabName: string, getHasUnsavedChanges: () => boolean, onDiscard?: () => void | Promise<void>, onCancel?: () => void) {
+function useRegisterTabSwitchGuard(
+    tabName: string,
+    getHasUnsavedChanges: () => boolean,
+    onDiscard?: () => void | Promise<void>,
+    onCancel?: () => void,
+    onVisibilityChange?: (isVisible: boolean) => void,
+) {
     const register = useContext(TabSwitchGuardContext);
     // Refresh the closures every render so the stable guard registered below always calls the latest ones.
-    const guardCallbacksRef = useRef({getHasUnsavedChanges, onDiscard, onCancel});
+    const guardCallbacksRef = useRef({getHasUnsavedChanges, onDiscard, onCancel, onVisibilityChange});
 
     useEffect(() => {
-        guardCallbacksRef.current = {getHasUnsavedChanges, onDiscard, onCancel};
+        guardCallbacksRef.current = {getHasUnsavedChanges, onDiscard, onCancel, onVisibilityChange};
     });
 
     // Opt-in: only register when there's a tab provider and an onDiscard to run, so callers outside a tabbed flow are unaffected.
@@ -36,6 +43,7 @@ function useRegisterTabSwitchGuard(tabName: string, getHasUnsavedChanges: () => 
             getHasUnsavedChanges: () => guardCallbacksRef.current.getHasUnsavedChanges(),
             onDiscard: () => guardCallbacksRef.current.onDiscard?.(),
             onCancel: () => guardCallbacksRef.current.onCancel?.(),
+            onVisibilityChange: (isVisible) => guardCallbacksRef.current.onVisibilityChange?.(isVisible),
         });
     }, [register, tabName, canRegister]);
 }

@@ -207,11 +207,13 @@ function OnyxTabNavigator<TTabName extends string = SelectedTabRequest>({
         }
         event.preventDefault();
         isDiscardModalOpenRef.current = true;
+        guard.onVisibilityChange?.(true);
         showConfirmModal({
             ...getDiscardChangesModalConfig(translate),
             shouldIgnoreBackHandlerDuringTransition: true,
         }).then((result) => {
             isDiscardModalOpenRef.current = false;
+            guard.onVisibilityChange?.(false);
             if (result.action !== ModalActions.CONFIRM) {
                 guard.onCancel?.();
                 return;

@@ -40,7 +40,7 @@ function useDiscardChangesConfirmation({
     });
     const hasUnsavedChanges = () => isFocused && !isSavingRef.current && getHasUnsavedChanges();
 
-    useRegisterTabSwitchGuard(route.name, hasUnsavedChanges, onTabSwitchDiscard, onCancel);
+    useRegisterTabSwitchGuard(route.name, hasUnsavedChanges, onTabSwitchDiscard, onCancel, onVisibilityChange);
 
     const showDiscardModal = (blockedAction?: NavigationAction) => {
         blockedNavigationAction.current = blockedAction;
