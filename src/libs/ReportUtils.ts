@@ -2018,9 +2018,32 @@ function hasReportBeenForwardedSinceLastSubmit(report: OnyxEntry<Report>): boole
     }
 
     const reportActions = Object.values(allReportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${report.reportID}`] ?? {});
-    const lastSubmittedAt = reportActions.filter(isSubmittedAction).reduce<string>((latest, action) => (action.created > latest ? action.created : latest), '');
+    const submittedActions = reportActions.filter(isSubmittedAction);
+    const lastSubmittedAction = submittedActions.length ? submittedActions.reduce((latest, action) => (action.created > latest.created ? action : latest)) : undefined;
+    const lastSubmittedAt = lastSubmittedAction?.created ?? '';
 
-    return reportActions.some((action) => isForwardedAction(action) && action.created > lastSubmittedAt);
+    if (reportActions.some((action) => isForwardedAction(action) && action.created > lastSubmittedAt)) {
+        return true;
+    }
+
+    if (!lastSubmittedAction) {
+        return false;
+    }
+
+    const reassignApproverActions = reportActions.filter(
+        (action): action is ReportAction<typeof CONST.REPORT.ACTIONS.TYPE.REASSIGN_APPROVER> =>
+            isActionOfType(action, CONST.REPORT.ACTIONS.TYPE.REASSIGN_APPROVER) && action.created > lastSubmittedAt,
+    );
+
+    if (reassignApproverActions.length === 0) {
+        return false;
+    }
+
+    const lastReassignApproverAction = reassignApproverActions.reduce((latest, action) => (action.created > latest.created ? action : latest));
+    const submittedTo = getOriginalMessage(lastSubmittedAction)?.submittedTo;
+    const newApproverID = getOriginalMessage(lastReassignApproverAction)?.newApproverID;
+
+    return !!submittedTo && !!newApproverID && submittedTo !== newApproverID;
 }
 
 function isAwaitingFirstLevelApproval(report: OnyxEntry<Report>): boolean {

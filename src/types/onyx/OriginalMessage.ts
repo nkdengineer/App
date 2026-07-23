@@ -272,6 +272,9 @@ type OriginalMessageSubmitted = {
 
     /** The workflow the report is submitted on */
     workflow?: ValueOf<typeof CONST.POLICY.APPROVAL_MODE>;
+
+    /** The account id of the user the report was submitted to */
+    submittedTo?: number;
 };
 
 /** Model of `created` report action */
