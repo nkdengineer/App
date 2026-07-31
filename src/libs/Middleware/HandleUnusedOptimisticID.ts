@@ -8,7 +8,7 @@ import * as PersistedRequests from '@userActions/PersistedRequests';
 import ONYXKEYS from '@src/ONYXKEYS';
 import type {PersonalDetailsList} from '@src/types/onyx';
 import type Report from '@src/types/onyx/Report';
-import type {AnyOnyxUpdate} from '@src/types/onyx/Request';
+import type {AnyOnyxUpdate, AnyRequest} from '@src/types/onyx/Request';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 
 import type {OnyxEntry} from 'react-native-onyx';
@@ -91,10 +91,58 @@ function getRestoredPersonalDetails(
 }
 
 /**
+ * Replaces an optimistic agent accountID with the real server-assigned ID in a persisted request.
+ * `agentAccountID` is stored as a number in request params (unlike reportIDs which are strings),
+ * so deepReplace alone is not enough for that field.
+ */
+function replaceOptimisticAgentAccountIDInRequest(persistedRequest: AnyRequest, oldAccountID: string, newAccountID: string): AnyRequest {
+    const requestClone = clone(persistedRequest);
+    if (requestClone.data) {
+        requestClone.data = deepReplaceKeysAndValues(requestClone.data, oldAccountID, newAccountID);
+        if (String(requestClone.data.agentAccountID) === oldAccountID) {
+            requestClone.data.agentAccountID = Number(newAccountID);
+        }
+    }
+
+    if (requestClone.optimisticData) {
+        requestClone.optimisticData = deepReplaceKeysAndValues(requestClone.optimisticData, oldAccountID, newAccountID);
+    }
+    if (requestClone.successData) {
+        requestClone.successData = deepReplaceKeysAndValues(requestClone.successData, oldAccountID, newAccountID);
+    }
+    if (requestClone.failureData) {
+        requestClone.failureData = deepReplaceKeysAndValues(requestClone.failureData, oldAccountID, newAccountID);
+    }
+    if (requestClone.finallyData) {
+        requestClone.finallyData = deepReplaceKeysAndValues(requestClone.finallyData, oldAccountID, newAccountID);
+    }
+
+    return requestClone;
+}
+
+function replaceOptimisticAgentAccountIDInPersistedRequests(oldAccountID: string, newAccountID: string, isFromSequentialQueue: boolean) {
+    if (isFromSequentialQueue) {
+        const ongoingRequest = PersistedRequests.getOngoingRequest();
+        if (ongoingRequest && String(ongoingRequest.data?.agentAccountID) === oldAccountID) {
+            PersistedRequests.updateOngoingRequest(replaceOptimisticAgentAccountIDInRequest(ongoingRequest, oldAccountID, newAccountID));
+        }
+    }
+
+    for (const [index, persistedRequest] of PersistedRequests.getAll().entries()) {
+        const persistedRequestClone = replaceOptimisticAgentAccountIDInRequest(persistedRequest, oldAccountID, newAccountID);
+        PersistedRequests.update(index, persistedRequestClone);
+    }
+}
+
+/**
  * This middleware checks for the presence of a field called preexistingReportID in the response.
  * If present, that means that the client passed an optimistic reportID with the request that the server did not use.
  * This can happen because there was already a report matching the parameters provided that the client didn't know about.
  * (i.e: a DM chat report with the same set of participants)
+ *
+ * It also checks for optimisticAgentAccountIDMapping from CreateAgent. When present, queued agent
+ * update/delete requests still reference the optimistic accountID; those IDs are rewritten to the
+ * real accountID so the commands succeed.
  *
  * If that happens, this middleware checks for any serialized network requests that reference the unused optimistic ID.
  * If it finds any, it replaces the unused optimistic ID with the "real ID" from the server.
@@ -117,6 +165,19 @@ const handleUnusedOptimisticID: Middleware = (requestResponse, request, isFromSe
         const responseOnyxData = response?.onyxData ?? [];
         for (const onyxData of responseOnyxData) {
             const key = onyxData.key;
+
+            // CreateAgent returns a map of optimistic accountID -> real accountID. Rewrite any queued
+            // agent update/delete requests that still carry the optimistic agentAccountID.
+            if (key === ONYXKEYS.OPTIMISTIC_AGENT_ACCOUNT_ID_MAPPING && isRecord(onyxData.value)) {
+                for (const [optimisticAccountID, realAccountID] of Object.entries(onyxData.value)) {
+                    if (realAccountID === null || realAccountID === undefined) {
+                        continue;
+                    }
+                    replaceOptimisticAgentAccountIDInPersistedRequests(String(optimisticAccountID), String(realAccountID), isFromSequentialQueue);
+                }
+                continue;
+            }
+
             if (!key?.startsWith(ONYXKEYS.COLLECTION.REPORT)) {
                 continue;
             }
