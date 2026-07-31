@@ -30,6 +30,7 @@ function VictoryChartPolar({explicitSize, headless}: VictoryChartPolarProps) {
     const theme = useTheme();
     const timezone = useCurrentTimezone();
     const designWidth = getChartDesignWidth(explicitSize, chartContentStyles.width);
+    console.log(data);
 
     const chartContent = (
         <>

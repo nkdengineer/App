@@ -5,11 +5,21 @@ import variables from '@styles/variables';
 
 import type {SkParagraph, SkParagraphBuilder, SkTypefaceFontProvider} from '@shopify/react-native-skia';
 
-import {FontStyle, FontWeight, Skia} from '@shopify/react-native-skia';
+import {FontSlant, FontStyle, FontWeight, Skia} from '@shopify/react-native-skia';
 import {scaleLinear} from 'd3-scale';
+
+import type {ChartLabelFontWeight} from './normalizeChartFontWeight';
+
+import resolveChartParagraphFontFamilies, {resolveChartFontMgrFamilyName} from './resolveChartParagraphFontFamilies';
 
 /** One reusable ParagraphBuilder per fontManager instance. Auto-GC'd when fontManager is released. */
 const builderCache = new WeakMap<SkTypefaceFontProvider, SkParagraphBuilder>();
+
+type BuildChartParagraphOptions = {
+    preferredFontFamily?: string;
+    fontWeight?: ChartLabelFontWeight;
+    fontStyle?: string;
+};
 
 /**
  * Builds a Skia paragraph for chart labels.
@@ -18,8 +28,11 @@ const builderCache = new WeakMap<SkTypefaceFontProvider, SkParagraphBuilder>();
  *
  * Reuses a cached ParagraphBuilder per fontManager (via reset()) to avoid allocating a new
  * builder on every call.
+ *
+ * When `preferredFontFamily` is set (e.g. "Expensify New Kansas"), that family is tried first
+ * and Skia falls back through NotoSansSymbols / ExpensifyNeue for missing glyphs such as ₫.
  */
-function buildChartParagraph(text: string, fontManager: SkTypefaceFontProvider, fontSize: number, color?: string): SkParagraph {
+function buildChartParagraph(text: string, fontManager: SkTypefaceFontProvider, fontSize: number, color?: string, options?: BuildChartParagraphOptions): SkParagraph {
     let builder = builderCache.get(fontManager);
     if (!builder) {
         builder = Skia.ParagraphBuilder.Make({}, fontManager);
@@ -27,10 +40,16 @@ function buildChartParagraph(text: string, fontManager: SkTypefaceFontProvider, 
     } else {
         builder.reset();
     }
+
+    const preferredFamily = resolveChartFontMgrFamilyName(options?.preferredFontFamily);
+    // Kansas only ships Medium; requesting Bold would skip it and pick Neue Bold instead.
+    const weight = preferredFamily === 'ExpensifyNewKansas' ? FontWeight.Medium : options?.fontWeight === 'bold' ? FontWeight.Bold : FontWeight.Normal;
+    const slant = options?.fontStyle === 'italic' ? FontSlant.Italic : FontSlant.Upright;
+
     return builder
         .pushStyle({
-            fontFamilies: VictoryTheme.fontFamilies,
-            fontStyle: {weight: FontWeight.Normal},
+            fontFamilies: resolveChartParagraphFontFamilies(options?.preferredFontFamily),
+            fontStyle: {weight, slant},
             fontSize,
             ...(color !== undefined ? {color: Skia.Color(color)} : {}),
         })
