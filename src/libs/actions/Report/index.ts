@@ -374,6 +374,9 @@ type OpenReportActionParams = {
 
     /** Beta features list */
     betas: OnyxEntry<Beta[]>;
+
+    /** Whether the report is an existing report */
+    isExistingReport?: boolean;
 };
 
 type PregeneratedResponseParams = {
@@ -1553,6 +1556,7 @@ function openReport(params: OpenReportActionParams) {
         hasCompletedGuidedSetupFlow,
         hasReportActions,
         shouldMarkAsRead = true,
+        isExistingReport = false,
     } = params;
     if (!reportID) {
         return;
@@ -1849,6 +1853,14 @@ function openReport(params: OpenReportActionParams) {
                 },
             },
         );
+
+        if (isExistingReport) {
+            successData.push({
+                onyxMethod: Onyx.METHOD.MERGE,
+                key: `${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${reportID}`,
+                value: {[optimisticCreatedAction.reportActionID]: null},
+            });
+        }
 
         // Add optimistic personal details for new participants
         const optimisticPersonalDetails: OnyxEntry<PersonalDetailsList> = {};
@@ -2279,6 +2291,9 @@ type CreateTransactionThreadReportParams = {
     /** Whether the user has completed the guided setup flow */
     // TODO: This will be required eventually. Refactor issue: https://github.com/Expensify/App/issues/66424
     hasCompletedGuidedSetupFlow?: boolean;
+
+    /** The ID of the existing transaction thread report */
+    existingThreadReportID?: string;
 };
 
 function createTransactionThreadReport(params: CreateTransactionThreadReportParams): OptimisticChatReport | undefined {
@@ -2294,6 +2309,7 @@ function createTransactionThreadReport(params: CreateTransactionThreadReportPara
         personalDetails,
         isSelfTourViewed,
         hasCompletedGuidedSetupFlow,
+        existingThreadReportID,
     } = params;
 
     // Determine if we need selfDM report (for track expenses or unreported transactions)
@@ -2330,7 +2346,7 @@ function createTransactionThreadReport(params: CreateTransactionThreadReportPara
         }
     }
 
-    const optimisticTransactionThreadReportID = generateReportID();
+    const optimisticTransactionThreadReportID = existingThreadReportID ?? generateReportID();
     const optimisticTransactionThread = buildTransactionThread(iouReportAction, reportToUse, currentUserAccountID, undefined, optimisticTransactionThreadReportID);
     const shouldAddPendingFields = transaction?.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.ADD || iouReportAction?.pendingAction === CONST.RED_BRICK_ROAD_PENDING_ACTION.ADD;
     const participantAccountIDsForDetails = [currentUserAccountID];
@@ -2357,6 +2373,7 @@ function createTransactionThreadReport(params: CreateTransactionThreadReportPara
         isSelfTourViewed,
         hasCompletedGuidedSetupFlow,
         betas,
+        isExistingReport: !!existingThreadReportID,
     });
     return optimisticTransactionThread;
 }

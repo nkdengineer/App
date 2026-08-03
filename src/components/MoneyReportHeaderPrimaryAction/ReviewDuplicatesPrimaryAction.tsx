@@ -38,6 +38,8 @@ function ReviewDuplicatesPrimaryAction({reportID, chatReportID}: SimpleActionPro
 
     const {transactions: reportTransactionsMap} = useTransactionsAndViolationsForReport(moneyRequestReport?.reportID);
     const transactions = Object.values(reportTransactionsMap);
+    const existingThreadID = getThreadReportIDsForTransactions(reportActions, transactions).at(0);
+    const [existingThreadReport] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${existingThreadID}`);
 
     return (
         <Button
@@ -57,9 +59,21 @@ function ReviewDuplicatesPrimaryAction({reportID, chatReportID}: SimpleActionPro
                         ),
                     );
                     if (duplicateTransaction) {
-                        const existingThreadID = getThreadReportIDsForTransactions(reportActions, [duplicateTransaction]).at(0);
                         if (existingThreadID) {
                             threadID = existingThreadID;
+                            if (!existingThreadReport) {
+                                const transactionID = duplicateTransaction.transactionID;
+                                const iouAction = getIOUActionForReportID(moneyRequestReport?.reportID, transactionID);
+                                createTransactionThreadReport({
+                                    introSelected,
+                                    currentUserLogin: email ?? '',
+                                    currentUserAccountID: accountID,
+                                    betas,
+                                    iouReport: moneyRequestReport,
+                                    iouReportAction: iouAction,
+                                    existingThreadReportID: existingThreadID,
+                                });
+                            }
                         } else {
                             const transactionID = duplicateTransaction.transactionID;
                             const iouAction = getIOUActionForReportID(moneyRequestReport?.reportID, transactionID);
