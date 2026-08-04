@@ -11,7 +11,6 @@ import {useSearchQueryContext, useSearchResultsContext, useSearchSelectionAction
 import type {SplitListItemType} from '@components/SelectionList/ListItem/types';
 import TabSelector from '@components/TabSelector/TabSelector';
 
-import useAllTransactions from '@hooks/useAllTransactions';
 import useConfirmModal from '@hooks/useConfirmModal';
 import {useCurrencyListActions} from '@hooks/useCurrencyList';
 import useCurrentUserPersonalDetails from '@hooks/useCurrentUserPersonalDetails';
@@ -68,7 +67,18 @@ import CONST from '@src/CONST';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 import type SCREENS from '@src/SCREENS';
-import passthroughPolicyTagListSelector from '@src/selectors/PolicyTagList';
+import {personalDetailsListSelector} from '@src/selectors/PersonalDetails';
+import {
+    createPoliciesForSplitExpenseSelector,
+    createPolicyTagsByIDsSelector,
+    createReportActionsByReportIDsSelector,
+    createReportNameValuePairsByIDsSelector,
+    createReportsForSplitExpenseSelector,
+    createSnapshotsForSplitExpenseSelector,
+    createSplitRelatedTransactionsSelector,
+    mergeSearchTransactionsForSplitExpense,
+} from '@src/selectors/SplitExpense';
+import {transactionViolationsByIDsSelector} from '@src/selectors/TransactionViolations';
 import type {SplitExpense} from '@src/types/onyx/IOU';
 import {isEmptyObject} from '@src/types/utils/EmptyObject';
 import isLoadingOnyxValue from '@src/types/utils/isLoadingOnyxValue';
@@ -109,24 +119,39 @@ function SplitExpensePage({route}: SplitExpensePageProps) {
     const [selectedTab] = useOnyx(`${ONYXKEYS.COLLECTION.SELECTED_TAB}${CONST.TAB.SPLIT_EXPENSE_TAB_TYPE}`);
     const [draftTransaction, draftTransactionMetadata] = useOnyx(`${ONYXKEYS.COLLECTION.SPLIT_TRANSACTION_DRAFT}${transactionID}`);
     const isLoadingDraftTransaction = isLoadingOnyxValue(draftTransactionMetadata);
-    const [allReports] = useOnyx(ONYXKEYS.COLLECTION.REPORT);
-    const [allReportActions] = useOnyx(ONYXKEYS.COLLECTION.REPORT_ACTIONS);
     const draftTransactionReport = useReportOrReportDraft(draftTransaction?.reportID);
     const parentTransactionReport = useReportOrReportDraft(draftTransactionReport?.parentReportID);
     const expenseReport = draftTransactionReport?.type === CONST.REPORT.TYPE.EXPENSE ? draftTransactionReport : parentTransactionReport;
     const [policyCategories] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY_CATEGORIES}${getNonEmptyStringOnyxID(expenseReport?.policyID)}`);
     const [expenseReportPolicy] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY}${getNonEmptyStringOnyxID(expenseReport?.policyID)}`);
-    const allTransactions = useAllTransactions();
     const currentUserPersonalDetails = useCurrentUserPersonalDetails();
+
+    const splitExpenses = draftTransaction?.comment?.splitExpenses ?? [];
+    const splitTransactionIDs = splitExpenses.map((item) => item.transactionID).filter((id): id is string => !!id);
+    const originalTransactionIDFromDraft = draftTransaction?.comment?.originalTransactionID;
+    const splitRelatedTransactionsParams = {
+        transactionID,
+        originalTransactionID: originalTransactionIDFromDraft,
+        splitTransactionIDs,
+        expenseReportID: expenseReport?.reportID,
+    };
+    const splitRelatedTransactionsSelector = createSplitRelatedTransactionsSelector(splitRelatedTransactionsParams);
+    const [collectionTransactions] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION, {selector: splitRelatedTransactionsSelector});
+    const allTransactions = useMemo(
+        () =>
+            mergeSearchTransactionsForSplitExpense(collectionTransactions, currentSearchResults?.data, {
+                transactionID,
+                originalTransactionID: originalTransactionIDFromDraft,
+                splitTransactionIDs,
+                expenseReportID: expenseReport?.reportID,
+            }),
+        [collectionTransactions, currentSearchResults?.data, transactionID, originalTransactionIDFromDraft, splitTransactionIDs, expenseReport?.reportID],
+    );
 
     const transaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${getNonEmptyStringOnyxID(transactionID)}`];
     const originalTransaction = allTransactions?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${getNonEmptyStringOnyxID(transaction?.comment?.originalTransactionID)}`];
-    const [allPolicies] = useOnyx(ONYXKEYS.COLLECTION.POLICY);
-    const [allReportNameValuePairs] = useOnyx(ONYXKEYS.COLLECTION.REPORT_NAME_VALUE_PAIRS);
-    const [allSnapshots] = useOnyx(ONYXKEYS.COLLECTION.SNAPSHOT);
     const [selfDMReportID] = useOnyx(ONYXKEYS.SELF_DM_REPORT_ID);
     const [report] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${getNonEmptyStringOnyxID(reportID)}`);
-    const parentReport = allReports?.[`${ONYXKEYS.COLLECTION.REPORT}${report?.parentReportID}`];
     const currentReport = report ?? currentSearchResults?.data?.[`${ONYXKEYS.COLLECTION.REPORT}${getNonEmptyStringOnyxID(reportID)}`];
     const [policyRecentlyUsedCurrencies] = useOnyx(ONYXKEYS.RECENTLY_USED_CURRENCIES);
     const [policyRecentlyUsedCategories] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY_RECENTLY_USED_CATEGORIES}${getIOURequestPolicyID(transaction, currentReport)}`);
@@ -134,6 +159,61 @@ function SplitExpensePage({route}: SplitExpensePageProps) {
     const personalPolicy = usePersonalPolicy();
     const effectivePolicy = useSplitEffectivePolicy(currentReport, draftTransaction, transaction);
     const {policyForMovingExpenses, shouldSelectPolicy} = usePolicyForMovingExpenses();
+
+    // For selfDM expenses, the IOU action lives in the selfDM report, not in an expense report.
+    const iouReportIDForActions = expenseReport?.reportID ?? (isSelfDM(draftTransactionReport) ? draftTransactionReport?.reportID : undefined);
+    const reportActionReportIDs = [iouReportIDForActions, expenseReport?.chatReportID, selfDMReportID].filter((id): id is string => !!id);
+    const reportActionsSelector = createReportActionsByReportIDsSelector(reportActionReportIDs);
+    const [allReportActions] = useOnyx(ONYXKEYS.COLLECTION.REPORT_ACTIONS, {selector: reportActionsSelector});
+
+    const originalTransactionID = draftTransaction?.comment?.originalTransactionID ?? CONST.IOU.OPTIMISTIC_TRANSACTION_ID;
+    const iouActions = getIOUActionForTransactions([originalTransactionID], allReportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${iouReportIDForActions}`]).filter(
+        (action) => action.pendingAction !== CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE,
+    );
+    const {iouReport} = useGetIOUReportFromReportAction(iouActions.at(0));
+    const [iouReportNextStep] = useOnyx(`${ONYXKEYS.COLLECTION.NEXT_STEP}${getNonEmptyStringOnyxID(iouReport?.reportID)}`);
+
+    const childTransactions = getChildTransactions(allTransactions, transactionID, isProduction);
+    const reportIDsForSplitExpense = [
+        reportID,
+        report?.parentReportID,
+        draftTransaction?.reportID,
+        draftTransactionReport?.parentReportID,
+        expenseReport?.reportID,
+        expenseReport?.chatReportID,
+        transaction?.reportID,
+        iouReport?.reportID,
+        selfDMReportID,
+        ...splitExpenses.map((item) => item.reportID),
+        ...childTransactions.map((childTransaction) => childTransaction?.reportID),
+        ...iouActions.map((action) => action.childReportID),
+    ].filter((id): id is string => !!id);
+
+    const policyIDsForSplitExpense = [
+        expenseReport?.policyID,
+        expenseReportPolicy?.id,
+        effectivePolicy?.id,
+        policyForMovingExpenses?.id,
+        personalPolicy?.id,
+        currentReport?.policyID,
+        iouReport?.policyID,
+    ].filter((id): id is string => !!id);
+
+    const reportsSelector = createReportsForSplitExpenseSelector({
+        reportIDs: reportIDsForSplitExpense,
+        policyIDs: policyIDsForSplitExpense,
+        policyExpenseChatOwnerAccountID: currentUserPersonalDetails.accountID,
+        selfDMReportID,
+    });
+    const [allReports] = useOnyx(ONYXKEYS.COLLECTION.REPORT, {selector: reportsSelector});
+    const parentReport = allReports?.[`${ONYXKEYS.COLLECTION.REPORT}${report?.parentReportID}`];
+
+    const policyIDsFromReports = Object.values(allReports ?? {})
+        .map((itemReport) => itemReport?.policyID)
+        .filter((id): id is string => !!id);
+    const allPolicyIDsForSplitExpense = [...policyIDsForSplitExpense, ...policyIDsFromReports];
+    const policiesSelector = createPoliciesForSplitExpenseSelector(allPolicyIDsForSplitExpense);
+    const [allPolicies] = useOnyx(ONYXKEYS.COLLECTION.POLICY, {selector: policiesSelector});
 
     // `effectivePolicy` is undefined for a self-DM split on the personal (P2P) rate, so fall back to the
     // moving-expenses policy to detect whether a workspace with selectable rates exists.
@@ -199,7 +279,6 @@ function SplitExpensePage({route}: SplitExpensePageProps) {
         }
         return signedAmount;
     }, [draftTransaction?.amount, transactionDetails.amount]);
-    const splitExpenses = draftTransaction?.comment?.splitExpenses ?? [];
     const sumOfSplitExpenses = splitExpenses.reduce((acc, item) => acc + (item.amount ?? 0), 0);
     const currencySymbol = getCurrencySymbol(transactionDetails.currency ?? '') ?? transactionDetails.currency ?? CONST.CURRENCY.USD;
 
@@ -210,19 +289,9 @@ function SplitExpensePage({route}: SplitExpensePageProps) {
     const isPerDiem = isPerDiemRequest(transaction);
     const isDistance = isDistanceRequest(transaction);
     const isCard = isManagedCardTransaction(transaction);
-    const originalTransactionID = draftTransaction?.comment?.originalTransactionID ?? CONST.IOU.OPTIMISTIC_TRANSACTION_ID;
-
-    // For selfDM expenses, the IOU action lives in the selfDM report, not in an expense report.
-    const iouReportIDForActions = expenseReport?.reportID ?? (isSelfDM(draftTransactionReport) ? draftTransactionReport?.reportID : undefined);
-    const iouActions = getIOUActionForTransactions([originalTransactionID], allReportActions?.[`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${iouReportIDForActions}`]).filter(
-        (action) => action.pendingAction !== CONST.RED_BRICK_ROAD_PENDING_ACTION.DELETE,
-    );
-    const {iouReport} = useGetIOUReportFromReportAction(iouActions.at(0));
-    const [iouReportNextStep] = useOnyx(`${ONYXKEYS.COLLECTION.NEXT_STEP}${getNonEmptyStringOnyxID(iouReport?.reportID)}`);
 
     const isPercentageMode = (selectedTab as string) === CONST.TAB.SPLIT.PERCENTAGE;
     const isDateMode = (selectedTab as string) === CONST.TAB.SPLIT.DATE;
-    const childTransactions = getChildTransactions(allTransactions, transactionID, isProduction);
     const isDraftSelfDMContext = isSelfDM(draftTransactionReport);
     const splitFieldDataFromChildTransactions = childTransactions.map((childTransaction) => {
         const childTransactionReport = allReports?.[`${ONYXKEYS.COLLECTION.REPORT}${childTransaction?.reportID}`];
@@ -236,9 +305,26 @@ function SplitExpensePage({route}: SplitExpensePageProps) {
     });
     const transactionReport = allReports?.[`${ONYXKEYS.COLLECTION.REPORT}${transaction?.reportID}`];
     const splitFieldDataFromOriginalTransaction = initSplitExpenseItemData(transaction, transactionReport, {isManuallyEdited: true});
-    const [transactionViolations] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION_VIOLATIONS);
+
+    const violationTransactionIDs = [
+        transactionID,
+        originalTransactionID,
+        ...splitTransactionIDs,
+        ...childTransactions.map((childTransaction) => childTransaction?.transactionID).filter((id): id is string => !!id),
+    ];
+    const transactionViolationsSelector = transactionViolationsByIDsSelector(violationTransactionIDs);
+    const [transactionViolations] = useOnyx(ONYXKEYS.COLLECTION.TRANSACTION_VIOLATIONS, {selector: transactionViolationsSelector});
     const [quickAction] = useOnyx(ONYXKEYS.NVP_QUICK_ACTION_GLOBAL_CREATE);
-    const [personalDetails] = useOnyx(ONYXKEYS.PERSONAL_DETAILS_LIST);
+
+    const personalDetailsAccountIDs = [
+        currentUserPersonalDetails.accountID,
+        expenseReport?.ownerAccountID,
+        iouReport?.ownerAccountID,
+        draftTransactionReport?.ownerAccountID,
+        ...Object.keys(expenseReport?.participants ?? {}).map(Number),
+        ...Object.keys(draftTransactionReport?.participants ?? {}).map(Number),
+    ];
+    const [personalDetails] = useOnyx(ONYXKEYS.PERSONAL_DETAILS_LIST, {selector: personalDetailsListSelector(personalDetailsAccountIDs)});
     const icons = useMemoizedLazyExpensifyIcons(['ArrowsLeftRight', 'Plus']);
 
     const {isBetaEnabled} = usePermissions();
@@ -304,7 +390,26 @@ function SplitExpensePage({route}: SplitExpensePageProps) {
         evenlyDistributeSplitExpenseAmounts(draftTransaction, transaction, effectivePolicy, isDraftSelfDMContext, personalPolicy?.outputCurrency, getCurrencySymbol);
     };
 
-    const [allPolicyTags] = useOnyx(ONYXKEYS.COLLECTION.POLICY_TAGS, {selector: passthroughPolicyTagListSelector});
+    const policyIDsForTags = allPolicyIDsForSplitExpense;
+    const policyTagsSelector = createPolicyTagsByIDsSelector(policyIDsForTags);
+    const [allPolicyTags] = useOnyx(ONYXKEYS.COLLECTION.POLICY_TAGS, {selector: policyTagsSelector});
+
+    const reportIDsForNVPs = reportIDsForSplitExpense;
+    const reportNameValuePairsSelector = createReportNameValuePairsByIDsSelector(reportIDsForNVPs);
+    const [allReportNameValuePairs] = useOnyx(ONYXKEYS.COLLECTION.REPORT_NAME_VALUE_PAIRS, {selector: reportNameValuePairsSelector});
+
+    const snapshotTransactionIDs = [
+        transactionID,
+        originalTransactionID,
+        ...splitTransactionIDs,
+        ...childTransactions.map((childTransaction) => childTransaction?.transactionID).filter((id): id is string => !!id),
+    ];
+    const snapshotsSelector = createSnapshotsForSplitExpenseSelector({
+        transactionIDs: snapshotTransactionIDs,
+        searchHashes: [isSearchBackToRoute ? currentSearchHash : undefined, ...activeGroupSearchHashes],
+    });
+    const [allSnapshots] = useOnyx(ONYXKEYS.COLLECTION.SNAPSHOT, {selector: snapshotsSelector});
+
     const [isTrackIntentUser] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED, {selector: isTrackIntentUserSelector});
 
     const onSaveSplitExpense = () => {
