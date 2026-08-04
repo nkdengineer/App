@@ -82,6 +82,7 @@ const translations: TranslationDeepObject<typeof en> = {
         unshare: 'Freigabe aufheben',
         yes: 'Ja',
         no: 'Nein',
+        dontChange: 'Nicht ändern',
         ok: 'OK',
         notNow: 'Nicht jetzt',
         noThanks: 'Nein danke',

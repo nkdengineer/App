@@ -80,9 +80,9 @@ type SectionType = {
     items: Array<SectionItemType | undefined>;
 };
 
-const getBooleanTitle = (value: boolean | undefined, translate: LocalizedTranslate): string => {
-    if (value === undefined) {
-        return '';
+const getBooleanTitle = (value: boolean | null | undefined, translate: LocalizedTranslate): string => {
+    if (value == null) {
+        return translate('common.dontChange');
     }
     return translate(value ? 'common.yes' : 'common.no');
 };

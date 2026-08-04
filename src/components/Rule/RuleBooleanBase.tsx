@@ -19,8 +19,10 @@ import {View} from 'react-native';
 
 import RuleNotFoundPageWrapper from './RuleNotFoundPageWrapper';
 
+const UNCHANGED = 'dontChange' as const;
+
 type BooleanFilterItem = ListItem & {
-    value: ValueOf<typeof CONST.SEARCH.BOOLEAN>;
+    value: ValueOf<typeof CONST.SEARCH.BOOLEAN> | typeof UNCHANGED;
 };
 
 type RuleBooleanBaseProps = {
@@ -53,26 +55,32 @@ function RuleBooleanBase({fieldID, titleKey, formID, onSelect, onBack, hash, use
     const [form] = useOnyx(formID);
     const styles = useThemeStyles();
 
-    const formValue = (form as Record<string, boolean | string | undefined>)?.[fieldID];
+    const formValue = (form as Record<string, boolean | string | null | undefined>)?.[fieldID];
 
-    let selectedItem = null;
-    if (formValue !== undefined) {
+    let selectedItem: ValueOf<typeof CONST.SEARCH.BOOLEAN> | typeof UNCHANGED = UNCHANGED;
+    if (formValue != null) {
         // Handle both string ('true'/'false') and boolean (true/false) values
         const isTruthy = useStringValues ? formValue === 'true' : formValue === true;
-        const booleanValue = isTruthy ? CONST.SEARCH.BOOLEAN.YES : CONST.SEARCH.BOOLEAN.NO;
-        selectedItem = booleanValues.find((value) => booleanValue === value) ?? null;
+        selectedItem = isTruthy ? CONST.SEARCH.BOOLEAN.YES : CONST.SEARCH.BOOLEAN.NO;
     }
 
-    const items = booleanValues.map((value) => ({
-        value,
-        keyForList: value,
-        text: translate(`common.${value}`),
-        isSelected: selectedItem === value,
-    }));
+    const items: BooleanFilterItem[] = [
+        {
+            value: UNCHANGED,
+            keyForList: UNCHANGED,
+            text: translate('common.dontChange'),
+            isSelected: selectedItem === UNCHANGED,
+        },
+        ...booleanValues.map((value) => ({
+            value,
+            keyForList: value,
+            text: translate(`common.${value}`),
+            isSelected: selectedItem === value,
+        })),
+    ];
 
     const onSelectItem = (selectedValue: BooleanFilterItem) => {
-        // If clicking on already-selected item, unselect it (set to undefined)
-        if (selectedValue.isSelected) {
+        if (selectedValue.value === UNCHANGED) {
             onSelect(fieldID, null);
             return;
         }
