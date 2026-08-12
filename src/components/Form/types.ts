@@ -13,6 +13,7 @@ import type PercentageForm from '@components/PercentageForm';
 import type Picker from '@components/Picker';
 import type PushRowWithModal from '@components/PushRowWithModal';
 import type RadioButtons from '@components/RadioButtons';
+import type {AnimatedTextInputRef} from '@components/RNTextInput';
 import type RoomNameInput from '@components/RoomNameInput';
 import type SingleChoiceQuestion from '@components/SingleChoiceQuestion';
 import type StatePicker from '@components/StatePicker';
@@ -203,9 +204,19 @@ type FormWrapperRef = {
 
 type InputRefs = Record<string, RefObject<InputComponentBaseProps>>;
 
+/** Hands the first input of a form over to `AutoFocusFirstInput`, which mounts and unmounts independently of the inputs. */
+type AutoFocusConnector = {
+    /** The first focusable input of the form, set as soon as it mounts */
+    focusableInput: AnimatedTextInputRef | null;
+
+    /** Ref callback starting the auto-focus flow, published by `AutoFocusFirstInput` while it is mounted */
+    inputCallbackRef: ((node: AnimatedTextInputRef) => void) | null;
+};
+
 type FormInputErrors<TFormID extends OnyxFormKey = OnyxFormKey> = Partial<Record<FormOnyxKeys<TFormID>, string | undefined>>;
 
 export type {
+    AutoFocusConnector,
     FormProps,
     ValidInputs,
     InputComponentValueProps,

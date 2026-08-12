@@ -1,5 +1,6 @@
 import {useInputBlurActions} from '@components/InputBlurContext';
 import type {LocalizedTranslate} from '@components/LocaleContextProvider';
+import type {AnimatedTextInputRef} from '@components/RNTextInput';
 import {getIsRestoringKeyboardFocus} from '@components/TextInput';
 
 import useAccessibilityAnnouncement from '@hooks/useAccessibilityAnnouncement';
@@ -34,8 +35,10 @@ import {deepEqual} from 'fast-equals';
 import React, {createRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState} from 'react';
 
 import type {RegisterInput} from './FormContext';
-import type {FormInputErrors, FormOnyxValues, FormProps, FormRef, FormWrapperRef, InputComponentBaseProps, InputRefs, ValueTypeKey} from './types';
+import type {AutoFocusConnector, FormInputErrors, FormOnyxValues, FormProps, FormRef, FormWrapperRef, InputComponentBaseProps, InputRefs, ValueTypeKey} from './types';
 
+import AutoFocusFirstInput from './AutoFocusFirstInput';
+import canAutoFocusFirstInput from './canAutoFocusFirstInput';
 import FormContext from './FormContext';
 import FormWrapper from './FormWrapper';
 import isNumericKeyboard from './isNumericKeyboard';
@@ -59,6 +62,14 @@ function getInitialValueByType(valueType?: ValueTypeKey): InitialDefaultValue {
         default:
             return '';
     }
+}
+
+/**
+ * Inputs are registered with the loose `InputComponentBaseProps` type, so we check for a focus method to tell apart the
+ * text inputs auto-focus can work with from inputs like checkboxes and pickers, which cannot be focused programmatically.
+ */
+function isFocusableInput(input: unknown): input is AnimatedTextInputRef {
+    return typeof input === 'object' && input !== null && 'focus' in input && typeof input.focus === 'function';
 }
 
 type FormProviderProps<TFormID extends OnyxFormKey = OnyxFormKey> = FormProps<TFormID> & {
@@ -134,6 +145,12 @@ type FormProviderProps<TFormID extends OnyxFormKey = OnyxFormKey> = FormProps<TF
     /** Whether the confirm button should show a spinner immediately on press */
     shouldShowLoadingImmediatelyOnPress?: boolean;
 
+    /**
+     * Whether the first input of the form should be focused once the screen transition ends.
+     * It is ignored on touch screens, where focusing an input opens the software keyboard on top of the form.
+     */
+    shouldAutoFocusFirstInput?: boolean;
+
     /** Reference to the outer element */
     ref?: ForwardedRef<FormRef>;
 };
@@ -157,6 +174,7 @@ function FormProvider({
     keyboardSubmitBehavior = CONST.KEYBOARD_SUBMIT_BEHAVIOR.DISMISS_THEN_SUBMIT,
     onBeforeSubmit,
     shouldShowLoadingImmediatelyOnPress = true,
+    shouldAutoFocusFirstInput = true,
     ref,
     ...rest
 }: FormProviderProps) {
@@ -165,6 +183,7 @@ function FormProvider({
     const [draftValues, draftValuesMetadata] = useOnyx<OnyxFormDraftKey, Form>(`${formID}Draft`);
     const {preferredLocale, translate} = useLocalize();
     const inputRefs = useRef<InputRefs>({});
+    const autoFocusConnector = useRef<AutoFocusConnector>({focusableInput: null, inputCallbackRef: null});
     const formWrapperRef = useRef<FormWrapperRef>(null);
     const touchedInputs = useRef<Record<string, boolean>>({});
     const [inputValues, setInputValues] = useState<Form>(() => ({...draftValues}));
@@ -414,6 +433,12 @@ function FormProvider({
         formWrapperRef.current?.scrollToEnd();
     }, []);
 
+    const setAutoFocusInputCallbackRef = useCallback((inputCallbackRef: AutoFocusConnector['inputCallbackRef']) => {
+        autoFocusConnector.current.inputCallbackRef = inputCallbackRef;
+    }, []);
+
+    const getAutoFocusableInput = useCallback(() => autoFocusConnector.current.focusableInput, []);
+
     useImperativeHandle(ref, () => ({
         resetForm,
         resetErrors,
@@ -451,6 +476,9 @@ function FormProvider({
 
             const hasNumericKeyboard = isNumericKeyboard(inputProps);
 
+            // Inputs register in the order they are rendered, so the first key belongs to the first input of the form.
+            const shouldAutoFocusInput = shouldAutoFocusFirstInput && Object.keys(inputRefs.current).at(0) === inputID;
+
             return {
                 ...inputProps,
                 ...(shouldSubmitForm && {
@@ -462,10 +490,16 @@ function FormProvider({
                     ...(!hasNumericKeyboard && {returnKeyType: 'go' as const}),
                 }),
                 ref:
-                    typeof inputRef === 'function'
+                    typeof inputRef === 'function' || shouldAutoFocusInput
                         ? (node: InputComponentBaseProps) => {
-                              inputRef(node);
+                              if (typeof inputRef === 'function') {
+                                  inputRef(node);
+                              }
                               newRef.current = node;
+                              if (shouldAutoFocusInput && isFocusableInput(node)) {
+                                  autoFocusConnector.current.focusableInput = node;
+                                  autoFocusConnector.current.inputCallbackRef?.(node);
+                              }
                           }
                         : newRef,
                 inputID,
@@ -578,6 +612,7 @@ function FormProvider({
             formID,
             shouldValidateOnChange,
             isFocusedRef,
+            shouldAutoFocusFirstInput,
         ],
     );
     const fallbackAnnouncementMessage = !isGeneralAlertVisible ? firstFieldErrorMessage : '';
@@ -611,6 +646,12 @@ function FormProvider({
             >
                 {typeof children === 'function' ? children({inputValues}) : children}
             </FormWrapper>
+            {shouldAutoFocusFirstInput && canAutoFocusFirstInput() && (
+                <AutoFocusFirstInput
+                    setInputCallbackRef={setAutoFocusInputCallbackRef}
+                    getFocusableInput={getAutoFocusableInput}
+                />
+            )}
         </FormContext.Provider>
     );
 }
