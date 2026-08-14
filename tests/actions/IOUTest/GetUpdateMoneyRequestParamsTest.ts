@@ -445,3 +445,49 @@ describe('getUpdateMoneyRequestParams — distance rate change with pending wayp
         expect(params.reportActionID).toBeUndefined();
     });
 });
+
+describe('getUpdateMoneyRequestParams — passed transaction', () => {
+    const snapshotTransaction: Transaction = {
+        transactionID: TRANSACTION_ID,
+        reportID: IOU_REPORT_ID,
+        amount: 1000,
+        currency: CONST.CURRENCY.USD,
+        created: '2024-01-01',
+        merchant: 'Test Merchant',
+        category: 'Travel',
+    } as Transaction;
+
+    const categoryUpdateParams = {
+        iouReportOwnerLogin: undefined,
+        transactionID: TRANSACTION_ID,
+        transactionThreadReport,
+        iouReport,
+        delegateAccountID: undefined,
+        transactionChanges: {category: 'Food'},
+        policy: undefined,
+        policyTagList: undefined,
+        reportPolicyTags: undefined,
+        policyCategories: undefined,
+        currentUserAccountIDParam: RORY_ACCOUNT_ID,
+        currentUserEmailParam: RORY_EMAIL,
+        isASAPSubmitBetaEnabled: false,
+        isTrackIntentUser: false,
+    };
+
+    it('should include the updated category when the transaction is passed but missing from the collection', () => {
+        // Given a transaction that exists only as a Search snapshot (not in the TRANSACTION collection)
+        const {params} = getUpdateMoneyRequestParams({
+            ...categoryUpdateParams,
+            transaction: snapshotTransaction,
+        });
+
+        // Then the API params still include the updated category
+        expect(params.category).toBe('Food');
+    });
+
+    it('should omit the category when the transaction is neither passed nor in the collection', () => {
+        const {params} = getUpdateMoneyRequestParams(categoryUpdateParams);
+
+        expect(params.category).toBeUndefined();
+    });
+});

@@ -161,6 +161,7 @@ function DynamicIOURequestStepCategoryCreate({
         } else if (isEditing && report) {
             updateMoneyRequestCategory({
                 transactionID: transaction?.transactionID ?? transactionID,
+                transaction,
                 transactionThreadReport: report,
                 parentReport,
                 iouReportOwnerLogin,

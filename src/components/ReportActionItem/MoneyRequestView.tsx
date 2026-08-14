@@ -880,6 +880,7 @@ function MoneyRequestView({
 
             updateMoneyRequestCategory({
                 transactionID,
+                transaction,
                 transactionThreadReport,
                 parentReport,
                 iouReportOwnerLogin,

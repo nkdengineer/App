@@ -70,6 +70,8 @@ type UpdateMoneyRequestData<TKey extends OnyxKey> = {
 
 type UpdateMoneyRequestDateParams = {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     parentReport: OnyxEntry<OnyxTypes.Report>;
     iouReportOwnerLogin: string | undefined;
@@ -220,6 +222,7 @@ function getRecalculatedDistanceRateIDForExpenseDate({
 /** Updates the created date of an expense */
 function updateMoneyRequestDate({
     transactionID,
+    transaction: transactionParam,
     transactionThreadReport,
     parentReport,
     iouReportOwnerLogin,
@@ -243,7 +246,7 @@ function updateMoneyRequestDate({
     getCurrencyDecimals,
     getCurrencySymbol,
 }: UpdateMoneyRequestDateParams) {
-    const transaction = getAllTransactions()[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
+    const transaction = transactionParam ?? getAllTransactions()[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
     const isTrackExpense = isTrackExpenseReport(transactionThreadReport) && isSelfDM(parentReport);
     const effectivePolicy = isTrackExpense ? policyForTrackExpense : policy;
     const currentTransactionViolations = transactionViolations?.[`${ONYXKEYS.COLLECTION.TRANSACTION_VIOLATIONS}${transactionID}`] ?? [];
@@ -315,6 +318,7 @@ function updateMoneyRequestDate({
     } else {
         data = getUpdateMoneyRequestParams({
             transactionID,
+            transaction,
             transactionThreadReport,
             iouReport: parentReport,
             iouReportOwnerLogin,
@@ -461,6 +465,7 @@ function updateMoneyRequestReimbursable({
 /** Updates the merchant field of an expense */
 function updateMoneyRequestMerchant({
     transactionID,
+    transaction,
     transactionThreadReport,
     parentReport,
     iouReportOwnerLogin,
@@ -478,6 +483,8 @@ function updateMoneyRequestMerchant({
     isTrackIntentUser,
 }: {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     parentReport: OnyxEntry<OnyxTypes.Report>;
     iouReportOwnerLogin: string | undefined;
@@ -504,6 +511,7 @@ function updateMoneyRequestMerchant({
     } else {
         data = getUpdateMoneyRequestParams({
             transactionID,
+            transaction,
             transactionThreadReport,
             iouReport: parentReport,
             iouReportOwnerLogin,
@@ -764,6 +772,8 @@ function updateMoneyRequestVendor({transactionID, vendorID, vendorName, transact
 
 type UpdateMoneyRequestTagParams = {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     parentReport: OnyxEntry<OnyxTypes.Report>;
     iouReportOwnerLogin: string | undefined;
@@ -785,6 +795,7 @@ type UpdateMoneyRequestTagParams = {
 /** Updates the tag of an expense */
 function updateMoneyRequestTag({
     transactionID,
+    transaction,
     transactionThreadReport,
     parentReport,
     iouReportOwnerLogin,
@@ -807,6 +818,7 @@ function updateMoneyRequestTag({
     };
     const {params, onyxData} = getUpdateMoneyRequestParams({
         transactionID,
+        transaction,
         transactionThreadReport,
         iouReport: parentReport,
         iouReportOwnerLogin,
@@ -1031,6 +1043,7 @@ function updateMoneyRequestDistance({
     } else {
         data = getUpdateMoneyRequestParams({
             transactionID: transaction?.transactionID,
+            transaction,
             transactionThreadReport,
             iouReport: parentReport,
             iouReportOwnerLogin,
@@ -1114,6 +1127,7 @@ function updateMoneyRequestDistance({
 /** Updates the category of an expense */
 function updateMoneyRequestCategory({
     transactionID,
+    transaction,
     transactionThreadReport,
     parentReport,
     iouReportOwnerLogin,
@@ -1132,6 +1146,8 @@ function updateMoneyRequestCategory({
     getCurrencyDecimals,
 }: {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     parentReport: OnyxEntry<OnyxTypes.Report>;
     iouReportOwnerLogin: string | undefined;
@@ -1155,6 +1171,7 @@ function updateMoneyRequestCategory({
 
     const {params, onyxData} = getUpdateMoneyRequestParams({
         transactionID,
+        transaction,
         transactionThreadReport,
         iouReport: parentReport,
         iouReportOwnerLogin,
@@ -1178,6 +1195,7 @@ function updateMoneyRequestCategory({
 /** Updates the description of an expense */
 function updateMoneyRequestDescription({
     transactionID,
+    transaction,
     transactionThreadReport,
     parentReport,
     iouReportOwnerLogin,
@@ -1194,6 +1212,8 @@ function updateMoneyRequestDescription({
     isTrackIntentUser,
 }: {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     parentReport: OnyxEntry<OnyxTypes.Report>;
     iouReportOwnerLogin: string | undefined;
@@ -1220,6 +1240,7 @@ function updateMoneyRequestDescription({
     } else {
         data = getUpdateMoneyRequestParams({
             transactionID,
+            transaction,
             transactionThreadReport,
             iouReport: parentReport,
             iouReportOwnerLogin,
@@ -1343,6 +1364,7 @@ function updateMoneyRequestDistanceRate({
     } else {
         data = getUpdateMoneyRequestParams({
             transactionID: transaction?.transactionID,
+            transaction,
             transactionThreadReport,
             iouReport: parentReport,
             iouReportOwnerLogin,
@@ -1378,6 +1400,8 @@ function updateMoneyRequestDistanceRate({
 
 type UpdateMoneyRequestAmountAndCurrencyParams = {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     parentReport: OnyxEntry<OnyxTypes.Report>;
     iouReportOwnerLogin: string | undefined;
@@ -1405,6 +1429,7 @@ type UpdateMoneyRequestAmountAndCurrencyParams = {
 /** Updates the amount and currency fields of an expense */
 function updateMoneyRequestAmountAndCurrency({
     transactionID,
+    transaction,
     transactionThreadReport,
     parentReport,
     iouReportOwnerLogin,
@@ -1443,6 +1468,7 @@ function updateMoneyRequestAmountAndCurrency({
     } else {
         data = getUpdateMoneyRequestParams({
             transactionID,
+            transaction,
             transactionThreadReport,
             iouReport: parentReport,
             iouReportOwnerLogin,
@@ -1468,6 +1494,8 @@ function updateMoneyRequestAmountAndCurrency({
 
 type GetUpdateMoneyRequestParamsType = {
     transactionID: string | undefined;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update, so callers that already have the transaction should pass it. */
+    transaction?: OnyxEntry<OnyxTypes.Transaction>;
     transactionThreadReport: OnyxEntry<OnyxTypes.Report>;
     transactionChanges: TransactionChanges;
     policy: OnyxEntry<OnyxTypes.Policy>;
@@ -1514,6 +1542,7 @@ type UpdateMoneyRequestDataKeys =
 function getUpdateMoneyRequestParams(params: GetUpdateMoneyRequestParamsType): UpdateMoneyRequestData<UpdateMoneyRequestDataKeys> {
     const {
         transactionID,
+        transaction: transactionParam,
         transactionThreadReport,
         transactionChanges,
         policy,
@@ -1577,8 +1606,8 @@ function getUpdateMoneyRequestParams(params: GetUpdateMoneyRequestParamsType): U
         >
     > = [];
 
-    // Step 1: Get the transaction being updated
-    const transaction = getAllTransactions()?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
+    // Search snapshot transactions may not be in the TRANSACTION collection until after the first update.
+    const transaction = transactionParam ?? getAllTransactions()?.[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
 
     // The manual-distance submit path always sends waypoints to keep the BE in sync, even when the user
     // only edited the distance number. Detect whether the addresses actually changed so we can skip the

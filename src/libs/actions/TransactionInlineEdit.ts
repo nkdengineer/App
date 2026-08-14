@@ -178,6 +178,8 @@ type TransactionEditPermissionsParams = {
 
 type GetIouParamsInput = {
     transactionID: string;
+    /** Search snapshot transactions may not be in the TRANSACTION collection until after the first update. */
+    transaction?: OnyxEntry<Transaction>;
     parentReport: OnyxEntry<Report>;
     parentReportAction: OnyxEntry<ReportAction>;
     transactionThreadReport: OnyxEntry<Report>;
@@ -212,6 +214,7 @@ type TransactionInlineEditParams = GetIouParamsInput & {
  */
 function getIouParamsForTransaction({
     transactionID,
+    transaction: transactionParam,
     parentReport,
     parentReportAction,
     transactionThreadReport,
@@ -230,7 +233,7 @@ function getIouParamsForTransaction({
     getCurrencyDecimals,
     getCurrencySymbol,
 }: GetIouParamsInput) {
-    const transaction = allTransactions[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
+    const transaction = transactionParam ?? allTransactions[`${ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`];
     const transactionViolations = allTransactionViolations[`${ONYXKEYS.COLLECTION.TRANSACTION_VIOLATIONS}${transactionID}`];
     const isUnreportedExpense = !transaction?.reportID || transaction.reportID === CONST.REPORT.UNREPORTED_REPORT_ID;
 
@@ -324,7 +327,7 @@ function editTransactionDateInline(params: TransactionInlineEditParams, newDate:
 
 /** Updates the merchant of an expense from the Search results table or the Expense Report page. */
 function editTransactionMerchantInline(params: TransactionInlineEditParams, newMerchant: string) {
-    const transaction = allTransactions[`${ONYXKEYS.COLLECTION.TRANSACTION}${params.transactionID}`];
+    const transaction = params.transaction ?? allTransactions[`${ONYXKEYS.COLLECTION.TRANSACTION}${params.transactionID}`];
 
     if (!isValidMerchant(newMerchant, transaction, params.parentReport)) {
         return;
