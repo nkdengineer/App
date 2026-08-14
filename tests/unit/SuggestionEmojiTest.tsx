@@ -126,7 +126,7 @@ describe('SuggestionEmoji', () => {
         mockUseDebounce.mockImplementation((callback) => {
             const callbackRef = React.useRef(callback);
             callbackRef.current = callback;
-            return React.useCallback((...args: unknown[]) => callbackRef.current(...args), []) as typeof callback;
+            return React.useMemo(() => Object.assign((...args: unknown[]) => callbackRef.current(...args), {cancel: jest.fn(), flush: jest.fn()}), []);
         });
         mockUseLocalize.mockReturnValue(mockLocalize);
         mockUseOnyx.mockReturnValue(createOnyxResult<number>(CONST.EMOJI_DEFAULT_SKIN_TONE));

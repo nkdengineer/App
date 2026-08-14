@@ -8,6 +8,7 @@ import {useRef} from 'react';
 
 type UseDebouncedSaveDraftResult = {
     saveDraft: (...args: unknown[]) => void;
+    cancelPendingSave: () => void;
     isSavePending: RefObject<boolean>;
 };
 
@@ -32,8 +33,14 @@ function useDebouncedSaveDraftImpl(saveDraftFn: (...args: unknown[]) => void, wa
         debouncedSaveDraft(...args);
     };
 
+    const cancelPendingSave = () => {
+        debouncedSaveDraft.cancel();
+        isSavePending.current = false;
+    };
+
     return {
         saveDraft,
+        cancelPendingSave,
         isSavePending,
     };
 }
@@ -43,14 +50,15 @@ function useDebouncedSaveDraftImpl(saveDraftFn: (...args: unknown[]) => void, wa
  * @param saveDraft - The function to save the draft. It will be called with the arguments passed to the triggerSaveDraft function.
  * @param wait - The number of milliseconds to delay.
  * @param shouldExecuteOnUnmount - Whether to execute the save draft function on unmount.
- * @returns An object containing the debounced save draft function, the trigger save draft function, and the is save pending ref.
- * @property {Function} debouncedSaveDraft - The debounced save draft function.
- * @property {Function} triggerSaveDraft - The trigger save draft function.
+ * @returns An object containing the debounced save draft function, the canceller for a pending save, and the is save pending ref.
+ * @property {Function} saveDraft - The debounced save draft function.
+ * @property {Function} cancelPendingSave - Discards a pending save so it can never land after the draft has been cleared.
  * @property {Ref<boolean>} isSavePending - The ref to check whether the save is pending.
  */
 function useDebouncedSaveDraft<SaveDraftArgs extends unknown[]>(saveDraftFn: (...args: SaveDraftArgs) => void, wait = CONST.TIMING.DRAFT_SAVE_DEBOUNCE_TIME, shouldExecuteOnUnmount = false) {
     return useDebouncedSaveDraftImpl(saveDraftFn as (...args: unknown[]) => void, wait, shouldExecuteOnUnmount) as {
         saveDraft: (...args: SaveDraftArgs) => void;
+        cancelPendingSave: () => void;
         isSavePending: RefObject<boolean>;
     };
 }

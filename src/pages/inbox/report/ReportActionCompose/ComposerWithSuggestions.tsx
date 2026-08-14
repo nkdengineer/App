@@ -73,7 +73,7 @@ import {useAnimatedRef, useSharedValue} from 'react-native-reanimated';
 
 import type {SuggestionsRef} from './ReportActionCompose';
 
-import {useComposerActions, useComposerEditState, useComposerText} from './ComposerContext';
+import {useComposerActions, useComposerEditActions, useComposerEditState, useComposerMeta, useComposerText} from './ComposerContext';
 import getCursorPosition from './getCursorPosition';
 import getScrollPosition from './getScrollPosition';
 import getUpdatedSyncSelection from './getUpdatedSyncSelection';
@@ -269,6 +269,8 @@ function ComposerWithSuggestions({
     const composerRef = useRef<ComposerRef | null>(null);
 
     const {editingState, editingReportID, editingReportAction, effectiveDraft, currentEditMessageSelection} = useComposerEditState();
+    const {saveEditDraft} = useComposerEditActions();
+    const {isEditDraftSavePendingRef} = useComposerMeta();
     const {setEditingMessage, setCurrentEditMessageSelection} = useReportActionActiveEditActions();
     const [reportActions] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${reportID}`);
 
@@ -284,9 +286,6 @@ function ComposerWithSuggestions({
         }
         return initialValue;
     });
-
-    // Save the draft of the report action. This debounced so that we're not ceaselessly saving your edit.
-    const {saveDraft: debouncedSaveReportActionDraft, isSavePending: isDraftSavePending} = useDebouncedSaveDraft(saveReportActionDraft);
 
     // Save the draft of the report comment. This debounced so that we're not ceaselessly saving your edit. Saving the draft
     // allows one to navigate somewhere else and come back to the comment and still have it in edit mode.
@@ -306,7 +305,7 @@ function ComposerWithSuggestions({
         isEditing,
         editingReportAction,
         updateDraftMessage: setText,
-        isEditInProgressRef: isDraftSavePending,
+        isEditInProgressRef: isEditDraftSavePendingRef,
     });
 
     const [selection, setSelection] = useState<TextSelection>(() => currentEditMessageSelection ?? {start: initialText.length, end: initialText.length});
@@ -553,7 +552,7 @@ function ComposerWithSuggestions({
             if (editingState === CONST.REPORT_ACTION_EDIT_MESSAGE_STATE.EDITING && shouldUseNarrowLayout) {
                 setEditingMessage(newCommentConverted);
                 if (shouldDebounceSaveComment) {
-                    debouncedSaveReportActionDraft(editingReportID ?? reportID, editingReportAction, reportActions, newCommentConverted);
+                    saveEditDraft(editingReportID ?? reportID, editingReportAction, reportActions, newCommentConverted);
                     return;
                 }
 
@@ -589,7 +588,7 @@ function ComposerWithSuggestions({
             editingReportID,
             editingReportAction,
             reportActions,
-            debouncedSaveReportActionDraft,
+            saveEditDraft,
             debouncedSaveComment,
             currentUserAccountID,
         ],

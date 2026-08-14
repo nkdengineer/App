@@ -6,11 +6,12 @@ import type {Mention} from '@components/MentionSuggestions';
 import type {ReportActionEditMessageState} from '@pages/inbox/report/ReportActionEditMessageContext';
 
 import CONST from '@src/CONST';
-import type {ReportAction} from '@src/types/onyx';
+import type {ReportAction, ReportActions} from '@src/types/onyx';
 import type {FileObject} from '@src/types/utils/Attachment';
 
 import type {RefObject} from 'react';
 import type {BlurEvent, TextInputSelectionChangeEvent, View} from 'react-native';
+import type {OnyxEntry} from 'react-native-onyx';
 
 import {createContext, useContext} from 'react';
 
@@ -79,6 +80,12 @@ type ComposerEditActions = {
     publishDraft: (draftMessage: string) => void;
     deleteDraft: () => void;
     setDidResetComposerHeightWhileEditing: (v: boolean) => void;
+    /**
+     * Debounced write of the message being edited to the report action draft. Owned by ComposerProvider so that
+     * `deleteDraft` can discard a pending save; a save landing after the draft is cleared would put the message
+     * straight back into edit mode.
+     */
+    saveEditDraft: (reportID: string | undefined, reportAction: ReportAction | null, reportActions: OnyxEntry<ReportActions>, draftMessage: string) => void;
 };
 
 // Frozen — stable refs, set once
@@ -90,6 +97,7 @@ type ComposerMeta = {
     isNextModalWillOpenRef: RefObject<boolean>;
     attachmentFileRef: RefObject<FileObject | FileObject[] | null>;
     textRef: RefObject<string>;
+    isEditDraftSavePendingRef: RefObject<boolean>;
 };
 
 const noop = () => {};
@@ -147,6 +155,7 @@ const defaultEditActions: ComposerEditActions = {
     publishDraft: noop,
     deleteDraft: noop,
     setDidResetComposerHeightWhileEditing: noop,
+    saveEditDraft: noop,
 };
 const ComposerEditActionsContext = createContext<ComposerEditActions>(defaultEditActions);
 

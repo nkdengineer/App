@@ -31,12 +31,22 @@ type UseEditMessageProps = {
     debouncedCommentMaxLengthValidation: DebouncedFuncLeading<(value: string) => boolean>;
     /** The ref to the composer */
     composerRef: React.RefObject<ComposerRef | null>;
+    /** Discards a pending debounced draft save so it cannot land after the draft has been cleared */
+    cancelPendingDraftSave: () => void;
 };
 
 /**
  * Delete the draft of the comment being edited. This will take the comment out of "edit mode" with the old content.
  */
-function useEditMessage({reportID, originalReportID, reportAction, shouldScrollToLastMessage = false, debouncedCommentMaxLengthValidation, composerRef}: UseEditMessageProps) {
+function useEditMessage({
+    reportID,
+    originalReportID,
+    reportAction,
+    shouldScrollToLastMessage = false,
+    debouncedCommentMaxLengthValidation,
+    composerRef,
+    cancelPendingDraftSave,
+}: UseEditMessageProps) {
     const reportScrollManager = useReportScrollManager();
 
     const {email} = useCurrentUserPersonalDetails();
@@ -54,6 +64,10 @@ function useEditMessage({reportID, originalReportID, reportAction, shouldScrollT
 
         stopEditing();
 
+        // Keystrokes are saved to the draft on a debounce, so a save can still be in flight here. It has to be
+        // discarded before the drafts are cleared, otherwise it re-creates the draft and the message we just stopped
+        // editing is pulled back into edit mode.
+        cancelPendingDraftSave();
         clearAllReportActionDrafts();
 
         // Scroll to the last comment after editing to make sure the whole comment is clearly visible in the report.

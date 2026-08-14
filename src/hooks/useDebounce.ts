@@ -15,11 +15,19 @@ type UseDebounceOptions = DebounceSettings & {
     shouldExecuteOnUnmount?: boolean;
 };
 
+type DebounceControls = {
+    /** Discard any pending trailing invocation without running it */
+    cancel: () => void;
+
+    /** Run any pending trailing invocation right away */
+    flush: () => void;
+};
+
 /**
  * Non-generic implementation so OXC's React Compiler can memoize the hook.
  * OXC bails on type params inside hooks ("Unsupported declaration type for hoisting").
  */
-function useDebounceImpl(func: GenericFunction, wait: number, options?: UseDebounceOptions): GenericFunction {
+function useDebounceImpl(func: GenericFunction, wait: number, options?: UseDebounceOptions): GenericFunction & DebounceControls {
     const debouncedFnRef = useRef<DebouncedFunc<GenericFunction> | undefined>(undefined);
     const {leading, maxWait, trailing = true, shouldExecuteOnUnmount = false} = options ?? {};
 
@@ -44,13 +52,23 @@ function useDebounceImpl(func: GenericFunction, wait: number, options?: UseDebou
         };
     }, [func, wait, leading, maxWait, trailing]);
 
-    return (...args: unknown[]) => {
-        const debouncedFn = debouncedFnRef.current;
+    return Object.assign(
+        (...args: unknown[]) => {
+            const debouncedFn = debouncedFnRef.current;
 
-        if (debouncedFn) {
-            debouncedFn(...args);
-        }
-    };
+            if (debouncedFn) {
+                debouncedFn(...args);
+            }
+        },
+        {
+            cancel: () => {
+                debouncedFnRef.current?.cancel();
+            },
+            flush: () => {
+                debouncedFnRef.current?.flush();
+            },
+        },
+    );
 }
 
 /**
@@ -66,10 +84,10 @@ function useDebounceImpl(func: GenericFunction, wait: number, options?: UseDebou
  * @param options.maxWait The maximum time func is allowed to be delayed before it's invoked.
  * @param options.trailing Specify invoking on the trailing edge of the timeout.
  * @param options.shouldExecuteOnUnmount When true, flush pending invocations on unmount instead of cancelling them.
- * @returns Returns a function to call the debounced function.
+ * @returns Returns a function to call the debounced function, with `cancel` and `flush` attached to control a pending invocation.
  */
-export default function useDebounce<T extends GenericFunction>(func: T, wait: number, options?: UseDebounceOptions): T {
-    return useDebounceImpl(func, wait, options) as T;
+export default function useDebounce<T extends GenericFunction>(func: T, wait: number, options?: UseDebounceOptions): T & DebounceControls {
+    return useDebounceImpl(func, wait, options) as T & DebounceControls;
 }
 
-export type {UseDebounceOptions};
+export type {UseDebounceOptions, DebounceControls};

@@ -7,7 +7,9 @@ import Log from '@libs/Log';
 import {chatIncludesConcierge} from '@libs/ReportUtils';
 
 import {useReportActionActiveEdit} from '@pages/inbox/report/ReportActionEditMessageContext';
+import useDebouncedSaveDraft from '@pages/inbox/report/useDebouncedSaveDraft';
 
+import {saveReportActionDraft} from '@userActions/Report';
 import {isBlockedFromConcierge as isBlockedFromConciergeUserAction} from '@userActions/User';
 
 import CONST from '@src/CONST';
@@ -100,6 +102,11 @@ function ComposerProvider({children, reportID}: ComposerProviderProps) {
 
     const originalReportID = useOriginalReportID(editingReportID ?? undefined, editingReportAction);
 
+    // Owned here rather than in ComposerWithSuggestions so the same debounce instance backs both the keystroke saves
+    // and `deleteDraft`. The composer is not unmounted when an edit ends on narrow layouts, so nothing else would
+    // discard a pending save, and it would re-create the draft we just cleared.
+    const {saveDraft: saveEditDraft, cancelPendingSave: cancelPendingEditDraftSave, isSavePending: isEditDraftSavePendingRef} = useDebouncedSaveDraft(saveReportActionDraft);
+
     const {publishDraft, deleteDraft} = useEditMessage({
         reportID: editingReportID ?? undefined,
         originalReportID,
@@ -107,6 +114,7 @@ function ComposerProvider({children, reportID}: ComposerProviderProps) {
         shouldScrollToLastMessage: false,
         debouncedCommentMaxLengthValidation,
         composerRef,
+        cancelPendingDraftSave: cancelPendingEditDraftSave,
     });
 
     const isDraftCommentEmpty = !text || !!text.match(CONST.REGEX.EMPTY_COMMENT);
@@ -197,6 +205,7 @@ function ComposerProvider({children, reportID}: ComposerProviderProps) {
         publishDraft,
         deleteDraft,
         setDidResetComposerHeightWhileEditing,
+        saveEditDraft,
     };
 
     const composerMeta = {
@@ -207,6 +216,7 @@ function ComposerProvider({children, reportID}: ComposerProviderProps) {
         isNextModalWillOpenRef,
         attachmentFileRef,
         textRef,
+        isEditDraftSavePendingRef,
     };
 
     return (

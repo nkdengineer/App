@@ -141,7 +141,7 @@ describe('SuggestionMention', () => {
         mockUseDebounce.mockImplementation((callback) => {
             const callbackRef = React.useRef(callback);
             callbackRef.current = callback;
-            return React.useCallback((...args: unknown[]) => callbackRef.current(...args), []) as typeof callback;
+            return React.useMemo(() => Object.assign((...args: unknown[]) => callbackRef.current(...args), {cancel: jest.fn(), flush: jest.fn()}), []);
         });
         mockUseMemoizedLazyExpensifyIcons.mockImplementation(() => mockIcons);
         mockUseLocalize.mockImplementation(() => createMock<ReturnType<typeof useLocalize>>(mockLocalize));
