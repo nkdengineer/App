@@ -6,6 +6,7 @@ import useCurrentUserPersonalDetails from '@hooks/useCurrentUserPersonalDetails'
 import {useMemoizedLazyExpensifyIcons} from '@hooks/useLazyAsset';
 import useLocalize from '@hooks/useLocalize';
 import useOnyx from '@hooks/useOnyx';
+import useSidePanelActions from '@hooks/useSidePanelActions';
 import useSidePanelState from '@hooks/useSidePanelState';
 import useThemeStyles from '@hooks/useThemeStyles';
 
@@ -29,6 +30,7 @@ function SidePanelButton({style}: SidePanelButtonProps) {
     const [introSelected] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED);
     const [isSelfTourViewed] = useOnyx(ONYXKEYS.NVP_ONBOARDING, {selector: hasSeenTourSelector});
     const [betas] = useOnyx(ONYXKEYS.BETAS);
+    const {openSidePanel} = useSidePanelActions();
 
     if (shouldHideHelpButton) {
         return null;
@@ -40,7 +42,7 @@ function SidePanelButton({style}: SidePanelButtonProps) {
                 sentryLabel={CONST.SENTRY_LABEL.SIDE_PANEL.HELP}
                 accessibilityLabel={translate('common.help')}
                 style={[styles.flexRow, styles.touchableButtonImage, style]}
-                onPress={() => navigateToConciergeChat(conciergeReportID, introSelected, currentUserAccountID, isSelfTourViewed, betas)}
+                onPress={openSidePanel}
             >
                 <Icon
                     src={ConciergeAvatar}
