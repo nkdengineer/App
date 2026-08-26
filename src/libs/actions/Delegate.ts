@@ -201,6 +201,11 @@ function connect({email, delegatedAccess, credentials, session, activePolicyID, 
                 },
             },
         },
+        {
+            onyxMethod: Onyx.METHOD.SET,
+            key: ONYXKEYS.IS_SWITCHING_TO_DELEGATOR,
+            value: false,
+        },
     ];
 
     // We need to access the authToken directly from the response to update the session
