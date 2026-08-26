@@ -187,7 +187,7 @@ function connect({email, delegatedAccess, credentials, session, activePolicyID, 
         },
     ];
 
-    const failureData: Array<OnyxUpdate<typeof ONYXKEYS.ACCOUNT>> = [
+    const failureData: Array<OnyxUpdate<typeof ONYXKEYS.ACCOUNT | typeof ONYXKEYS.IS_SWITCHING_TO_DELEGATOR>> = [
         {
             onyxMethod: Onyx.METHOD.MERGE,
             key: ONYXKEYS.ACCOUNT,
