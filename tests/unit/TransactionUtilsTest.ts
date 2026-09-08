@@ -1280,6 +1280,20 @@ describe('TransactionUtils', () => {
             const transaction = generateTransaction({iouRequestType: CONST.IOU.REQUEST_TYPE.DISTANCE_GPS});
             expect(TransactionUtils.isMapBasedDistanceRequest(transaction)).toBe(true);
         });
+
+        // New Expensify draws its own distance e-receipt for these, so the generated PDF beside them is never shown.
+        it('is true for a map distance expense whichever receipt it stores', () => {
+            const PDF_RECEIPT = {source: 'https://www.expensify.com/receipts/w_abc123.pdf', filename: 'w_abc123.pdf'};
+            const UPDATE = CONST.RED_BRICK_ROAD_PENDING_ACTION.UPDATE;
+
+            expect(TransactionUtils.isMapBasedDistanceRequest(generateTransaction({iouRequestType: CONST.IOU.REQUEST_TYPE.DISTANCE_MAP, receipt: PDF_RECEIPT}))).toBe(true);
+            expect(TransactionUtils.isMapBasedDistanceRequest(generateTransaction({iouRequestType: CONST.IOU.REQUEST_TYPE.DISTANCE_MAP, receipt: undefined}))).toBe(true);
+            expect(
+                TransactionUtils.isMapBasedDistanceRequest(
+                    generateTransaction({iouRequestType: CONST.IOU.REQUEST_TYPE.DISTANCE_MAP, receipt: PDF_RECEIPT, pendingFields: {merchant: UPDATE}}),
+                ),
+            ).toBe(true);
+        });
     });
 
     describe('hasPendingDistanceReceiptRegeneration', () => {
@@ -1295,6 +1309,22 @@ describe('TransactionUtils', () => {
         it('returns true while a distance/rate edit is regenerating the receipt', () => {
             expect(TransactionUtils.hasPendingDistanceReceiptRegeneration(generateTransaction({pendingFields: {waypoints: UPDATE}}))).toBe(true);
             expect(TransactionUtils.hasPendingDistanceReceiptRegeneration(generateTransaction({pendingFields: {merchant: UPDATE}}))).toBe(true);
+        });
+    });
+
+    describe('hasDistanceRouteErrors', () => {
+        it('returns false when the route is clean', () => {
+            expect(TransactionUtils.hasDistanceRouteErrors(generateTransaction())).toBe(false);
+            expect(TransactionUtils.hasDistanceRouteErrors(generateTransaction({errors: {}, errorFields: {}}))).toBe(false);
+        });
+
+        it('returns true for a route or waypoint error', () => {
+            expect(TransactionUtils.hasDistanceRouteErrors(generateTransaction({errorFields: {route: {someError: 'No route found'}}}))).toBe(true);
+            expect(TransactionUtils.hasDistanceRouteErrors(generateTransaction({errorFields: {waypoints: {someError: 'Bad waypoint'}}}))).toBe(true);
+        });
+
+        it('ignores errors that say nothing about the route, such as a failed payment', () => {
+            expect(TransactionUtils.hasDistanceRouteErrors(generateTransaction({errors: {someError: 'Something went wrong'}}))).toBe(false);
         });
     });
 

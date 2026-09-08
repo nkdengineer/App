@@ -1,4 +1,4 @@
-import DistanceEReceipt from '@components/DistanceEReceipt';
+import {DistanceEReceiptContent} from '@components/DistanceEReceipt';
 
 import useThemeStyles from '@hooks/useThemeStyles';
 
@@ -43,7 +43,7 @@ function HoveredDistanceEReceipt({transaction}: HoveredDistanceEReceiptProps) {
                 style={[{width: variables.eReceiptHoverCardWidth}, scale ? {transform: [{scale}]} : styles.opacity0]}
                 onLayout={onCardLayout}
             >
-                <DistanceEReceipt transaction={transaction} />
+                <DistanceEReceiptContent transaction={transaction} />
             </View>
         </View>
     );
