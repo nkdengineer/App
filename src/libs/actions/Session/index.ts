@@ -36,6 +36,7 @@ import * as SequentialQueue from '@libs/Network/SequentialQueue';
 import clearPrefetchOnAppStart from '@libs/Prefetch/clearPrefetchOnAppStart';
 import Pusher from '@libs/Pusher';
 import reauthenticate from '@libs/Reauthentication';
+import ReceiptStorage from '@libs/ReceiptStorage';
 import {getReportIDFromLink} from '@libs/ReportUtils';
 import {runSessionCleanupCallbacks} from '@libs/SessionCleanup';
 import * as SessionUtils from '@libs/SessionUtils';
@@ -1159,6 +1160,7 @@ function cleanupSession() {
         Log.info('Cleared all cache data', true, {}, true);
     });
     clearCachedAttachments();
+    ReceiptStorage.clear();
     clearSoundAssetsCache();
     runSessionCleanupCallbacks();
 }

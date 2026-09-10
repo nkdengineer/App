@@ -7035,6 +7035,7 @@ const CONST = {
 
     CACHE_API_KEYS: {
         ATTACHMENTS: 'attachments',
+        RECEIPTS: 'receipts',
     },
 
     SESSION_STORAGE_KEYS: {

@@ -103,4 +103,12 @@ describe('ReceiptStorage', () => {
             expect(ReceiptStorage.resolve('https://www.expensify.com/receipts/w_9.jpg')).toBe('https://www.expensify.com/receipts/w_9.jpg');
         });
     });
+
+    describe('revive', () => {
+        it('returns the resolved path, since native files survive a relaunch', async () => {
+            await expect(ReceiptStorage.revive('1', 'file:///var/mobile/Containers/Data/Application/BBBB-2222/Documents/Receipts-Upload/receipt_9.jpg')).resolves.toBe(
+                `file://${FOLDER}/receipt_9.jpg`,
+            );
+        });
+    });
 });

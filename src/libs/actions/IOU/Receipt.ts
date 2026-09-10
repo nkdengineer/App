@@ -57,6 +57,7 @@ function detachReceipt(
     if (!transactionID) {
         return;
     }
+    ReceiptStorage.drop(transactionID);
     const newTransaction = transaction
         ? {
               ...transaction,
@@ -199,6 +200,8 @@ function replaceReceipt({
         return;
     }
 
+    ReceiptStorage.drop(transactionID);
+
     const receiptTraceId = mintAndStampReceiptTraceId(file);
     logReceiptCaptured({file, captureSource: 'replace', receiptTraceId});
 
@@ -332,6 +335,7 @@ function setMoneyRequestReceipt(
     thumbnail?: string,
     receiptTraceId?: string,
 ) {
+    ReceiptStorage.remember(source);
     Onyx.merge(`${isDraft ? ONYXKEYS.COLLECTION.TRANSACTION_DRAFT : ONYXKEYS.COLLECTION.TRANSACTION}${transactionID}`, {
         // isTestReceipt = false and isTestDriveReceipt = false are being converted to null because we don't really need to store it in Onyx in those cases
         receipt: {source, filename, type: type ?? '', isTestReceipt: isTestReceipt ? true : null, isTestDriveReceipt: isTestDriveReceipt ? true : null, thumbnail, receiptTraceId},

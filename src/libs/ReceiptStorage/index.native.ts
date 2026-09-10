@@ -75,6 +75,14 @@ const resolve: ReceiptStorage['resolve'] = (source) => {
     return durableName ? toLocalUri(durableName) : source;
 };
 
-const receiptStorage: ReceiptStorage = {adopt, toLocalUri, resolve};
+const remember: ReceiptStorage['remember'] = () => {};
+
+const revive: ReceiptStorage['revive'] = (_transactionID, source) => Promise.resolve(resolve(source));
+
+const drop: ReceiptStorage['drop'] = () => {};
+
+const clear: ReceiptStorage['clear'] = () => {};
+
+const receiptStorage: ReceiptStorage = {adopt, toLocalUri, resolve, remember, revive, drop, clear};
 
 export default receiptStorage;

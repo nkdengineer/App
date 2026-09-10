@@ -7,12 +7,12 @@ import {useShowContextMenuState} from '@components/ShowContextMenuContext';
 
 import {useMemoizedLazyExpensifyIcons} from '@hooks/useLazyAsset';
 import useLocalize from '@hooks/useLocalize';
+import useReceiptLocalSource from '@hooks/useReceiptLocalSource';
 import useThemeStyles from '@hooks/useThemeStyles';
 
 import {hasHoverSupport} from '@libs/DeviceCapabilities';
 import {getReportIDForExpense} from '@libs/MergeTransactionUtils';
 import Navigation from '@libs/Navigation/Navigation';
-import ReceiptStorage from '@libs/ReceiptStorage';
 import {getThumbnailAndImageURIs} from '@libs/ReceiptUtils';
 import {
     hasEReceipt,
@@ -137,6 +137,7 @@ function ReportActionItemImage({
     const {translate} = useLocalize();
     const icons = useMemoizedLazyExpensifyIcons(['Receipt']);
     const {report: contextReport, transactionThreadReport} = useShowContextMenuState();
+    const localSource = useReceiptLocalSource(transaction);
     const isMapDistanceRequest = !!transaction && isDistanceRequest(transaction) && !isManualDistanceRequest(transaction);
     const hasErrors = !isEmptyObject(transaction?.errors) || !isEmptyObject(transaction?.errorFields?.route) || !isEmptyObject(transaction?.errorFields?.waypoints);
     // While the receipt is regenerating its stored URL is stale, so draw the live route from `routes.coordinates`
@@ -170,7 +171,6 @@ function ReportActionItemImage({
         );
     }
 
-    const localSource = ReceiptStorage.resolve(transaction?.receipt?.localSource);
     const effectiveIsLocalFile = isLocalFile || !!localSource;
     const effectiveThumbnail = localSource ?? thumbnail;
     const receiptURIs = transaction ? getThumbnailAndImageURIs(transaction, null, null) : undefined;
