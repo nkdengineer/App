@@ -15,7 +15,6 @@ import useOnyx from '@hooks/useOnyx';
 import useResponsiveLayout from '@hooks/useResponsiveLayout';
 import useThemeStyles from '@hooks/useThemeStyles';
 
-import {appendAccountingConnectionQuery, getAccountingConnectionFromParams} from '@libs/accountingConnectionQuery';
 import Clipboard from '@libs/Clipboard';
 import getPlatform from '@libs/getPlatform';
 import localFileDownload from '@libs/localFileDownload';
@@ -30,7 +29,7 @@ import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES, {DYNAMIC_ROUTES} from '@src/ROUTES';
 import isLoadingOnyxValue from '@src/types/utils/isLoadingOnyxValue';
 
-import {useIsFocused, useRoute} from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 import React, {useEffect, useState} from 'react';
 import {View} from 'react-native';
 
@@ -50,9 +49,6 @@ function DynamicTwoFactorAuthPage() {
     const isFocused = useIsFocused();
 
     const backPath = useDynamicBackPath(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_ROOT.path);
-    const route = useRoute();
-    // Back paths drop suffix query params, so put the connector back before opening the next 2FA step.
-    const backPathWithConnection = appendAccountingConnectionQuery(backPath, getAccountingConnectionFromParams(route.params));
 
     const isWeb = getPlatform() === CONST.PLATFORM.WEB;
 
@@ -74,7 +70,7 @@ function DynamicTwoFactorAuthPage() {
     useEffect(() => {
         if (!isUserValidated) {
             Navigation.isNavigationReady().then(() => {
-                Navigation.navigate(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_VERIFY_ACCOUNT.path, backPathWithConnection), {forceReplace: true});
+                Navigation.navigate(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_VERIFY_ACCOUNT.path, backPath), {forceReplace: true});
             });
             return;
         }
@@ -195,7 +191,7 @@ function DynamicTwoFactorAuthPage() {
                                 setError('');
                                 setCodesAreCopied();
                                 announceStatus(translate('fileDownload.success.title'));
-                                Navigation.navigate(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_VERIFY.path, backPathWithConnection), {forceReplace: true});
+                                Navigation.navigate(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_VERIFY.path, backPath), {forceReplace: true});
                             }}
                         >
                             <Button.Text>{translate('twoFactorAuth.downloadCodes')}</Button.Text>

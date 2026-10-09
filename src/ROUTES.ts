@@ -153,22 +153,18 @@ const DYNAMIC_ROUTES = {
     TWO_FACTOR_AUTH_VERIFY_ACCOUNT: {
         path: 'two-factor-auth/verify-account',
         entryScreens: ['*'],
-        queryParams: ['accountingConnection'],
     },
     TWO_FACTOR_AUTH_ROOT: {
         path: 'two-factor-auth',
         entryScreens: ['*'],
-        queryParams: ['accountingConnection'],
     },
     TWO_FACTOR_AUTH_VERIFY: {
         path: 'two-factor-auth/verify',
         entryScreens: ['*'],
-        queryParams: ['accountingConnection'],
     },
     TWO_FACTOR_AUTH_SUCCESS: {
         path: 'two-factor-auth/success',
         entryScreens: ['*'],
-        queryParams: ['accountingConnection'],
     },
     ADD_BANK_ACCOUNT_VERIFY_ACCOUNT: {
         path: 'add-bank-account/verify-account',

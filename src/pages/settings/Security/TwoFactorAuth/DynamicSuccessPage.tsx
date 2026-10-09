@@ -3,10 +3,8 @@ import useDynamicForwardPath from '@hooks/useDynamicForwardPath';
 import useEnvironment from '@hooks/useEnvironment';
 import useOnyx from '@hooks/useOnyx';
 
-import {getAccountingConnectionFromParams} from '@libs/accountingConnectionQuery';
 import AccountUtils from '@libs/AccountUtils';
 import {getXeroSetupLink} from '@libs/actions/connections/Xero';
-import {getZohoBooksSetupLink} from '@libs/actions/connections/ZohoBooks';
 import getPlatform from '@libs/getPlatform';
 import getStateFromPath from '@libs/Navigation/helpers/getStateFromPath';
 import Navigation from '@libs/Navigation/Navigation';
@@ -119,14 +117,13 @@ function DynamicSuccessPage({route}: DynamicSuccessPageProps) {
         if (dynamicForwardPath) {
             const policyID = route.params?.policyID;
             if (policyID) {
-                const isZohoBooksConnection = getAccountingConnectionFromParams(route.params) === CONST.POLICY.CONNECTIONS.NAME.ZOHO_BOOKS;
-                // Open the OAuth setup the same way the connect flow does per platform: on web open the link inline in a
+                // Open Xero setup the same way ConnectToXeroFlow does per platform: on web open the link inline in a
                 // new browser tab (within this button's gesture), on native navigate to the in-app WebView setup
                 // screen. Calling openLink on native would open the external browser instead of the WebView.
                 if (getPlatform() === CONST.PLATFORM.WEB) {
-                    openLink(isZohoBooksConnection ? getZohoBooksSetupLink(policyID) : getXeroSetupLink(policyID), environmentURL);
+                    openLink(getXeroSetupLink(policyID), environmentURL);
                 } else {
-                    Navigation.navigate(isZohoBooksConnection ? ROUTES.POLICY_ACCOUNTING_ZOHO_BOOKS_SETUP.getRoute(policyID) : ROUTES.POLICY_ACCOUNTING_XERO_SETUP.getRoute(policyID));
+                    Navigation.navigate(ROUTES.POLICY_ACCOUNTING_XERO_SETUP.getRoute(policyID));
                 }
             }
         }
