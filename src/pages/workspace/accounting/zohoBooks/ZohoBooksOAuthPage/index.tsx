@@ -8,13 +8,13 @@ import type SCREENS from '@src/SCREENS';
 
 import {useEffect} from 'react';
 
-type ZohoBooksSetupPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.WORKSPACE.ACCOUNTING.ZOHO_BOOKS_SETUP>;
+type ZohoBooksOAuthPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.WORKSPACE.ACCOUNTING.ZOHO_BOOKS_OAUTH>;
 
-function ZohoBooksSetupPage({route}: ZohoBooksSetupPageProps) {
+function ZohoBooksOAuthPage({route}: ZohoBooksOAuthPageProps) {
     const policyID = route.params.policyID;
 
     useEffect(() => {
-        // On web the connect flow opens the Zoho Books setup link inline (new tab), so this screen has no content. It is
+        // On web the setup form opens the Zoho Books OAuth link inline (new tab), so this screen has no content. It is
         // only reached via a deep link, so just return to the workspace accounting page. We wait for the RHP open
         // transition to finish first, otherwise goBack fires mid-transition and is dropped.
         const handle = TransitionTracker.runAfterTransitions({
@@ -27,4 +27,4 @@ function ZohoBooksSetupPage({route}: ZohoBooksSetupPageProps) {
     return null;
 }
 
-export default ZohoBooksSetupPage;
+export default ZohoBooksOAuthPage;

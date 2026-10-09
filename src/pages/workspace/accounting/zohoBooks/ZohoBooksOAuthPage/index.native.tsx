@@ -4,22 +4,24 @@ import type {SettingsNavigatorParamList} from '@libs/Navigation/types';
 
 import AccountingSetupWebViewPage from '@pages/workspace/accounting/AccountingSetupWebViewPage';
 
+import ROUTES from '@src/ROUTES';
 import type SCREENS from '@src/SCREENS';
 
 import React from 'react';
 
-type ZohoBooksSetupPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.WORKSPACE.ACCOUNTING.ZOHO_BOOKS_SETUP>;
+type ZohoBooksOAuthPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.WORKSPACE.ACCOUNTING.ZOHO_BOOKS_OAUTH>;
 
-function ZohoBooksSetupPage({route}: ZohoBooksSetupPageProps) {
+function ZohoBooksOAuthPage({route}: ZohoBooksOAuthPageProps) {
     const policyID = route.params.policyID;
 
     return (
         <AccountingSetupWebViewPage
             uri={getZohoBooksSetupLink(policyID)}
-            testID="ZohoBooksSetupPage"
+            testID="ZohoBooksOAuthPage"
             shouldAppendShortLivedAuthToken
+            backTo={ROUTES.POLICY_ACCOUNTING.getRoute(policyID)}
         />
     );
 }
 
-export default ZohoBooksSetupPage;
+export default ZohoBooksOAuthPage;

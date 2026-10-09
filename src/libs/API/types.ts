@@ -1609,7 +1609,7 @@ const READ_COMMANDS = {
     SYNC_POLICY_TO_DUALENTRY: 'SyncPolicyToDualEntry',
     SYNC_POLICY_TO_CAMPFIRE: 'SyncPolicyToCampfire',
     SYNC_POLICY_TO_ZOHO_BOOKS: 'SyncPolicyToZohoBooks',
-    CONNECT_POLICY_TO_ZOHO_BOOKS: 'ConnectPolicyToZohoBooks',
+    CONNECT_POLICY_TO_ZOHO_BOOKS: 'ConnectPolicyToZohoBooksOAuth',
     SYNC_POLICY_TO_BUSINESS_CENTRAL: 'SyncPolicyToBusinessCentral',
     CONNECT_POLICY_TO_FINANCIAL_FORCE: 'ConnectPolicyToFinancialForce',
     OPEN_REIMBURSEMENT_ACCOUNT_PAGE: 'OpenReimbursementAccountPage',

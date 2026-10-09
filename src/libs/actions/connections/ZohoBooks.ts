@@ -34,7 +34,7 @@ import type {ValueOf} from 'type-fest';
 import Onyx from 'react-native-onyx';
 
 function getZohoBooksSetupLink(policyID: string) {
-    // Zoho Books authenticates with OAuth, so the connector opens this URL in the browser.
+    // Zoho Books authenticates with OAuth. The setup form opens this URL after the user chooses to connect.
     const params = new URLSearchParams({policyID});
     const commandURL = getCommandURL({command: READ_COMMANDS.CONNECT_POLICY_TO_ZOHO_BOOKS, shouldSkipWebProxy: true});
     return commandURL + params.toString();

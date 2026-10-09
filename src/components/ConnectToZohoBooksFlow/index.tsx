@@ -1,20 +1,17 @@
-import useEnvironment from '@hooks/useEnvironment';
+import Navigation from '@libs/Navigation/Navigation';
 
-import {getZohoBooksSetupLink} from '@libs/actions/connections/ZohoBooks';
-
-import {openLink} from '@userActions/Link';
+import ROUTES from '@src/ROUTES';
 
 import {useEffect} from 'react';
 
-import type {ConnectToZohoBooksFlowProps} from './types';
+type ConnectToZohoBooksFlowProps = {
+    policyID: string;
+};
 
 function ConnectToZohoBooksFlow({policyID}: ConnectToZohoBooksFlowProps) {
-    const {environmentURL} = useEnvironment();
-
     useEffect(() => {
-        // On web the setup opens OldDot in a new browser tab. Open it inline here (within the connect click's
-        // user-gesture window) instead of navigating to a setup screen, otherwise the popup blocker stops the tab.
-        openLink(getZohoBooksSetupLink(policyID), environmentURL);
+        Navigation.navigate(ROUTES.POLICY_ACCOUNTING_ZOHO_BOOKS_SETUP.getRoute(policyID));
+        // This needs to run once as we will navigate away
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
