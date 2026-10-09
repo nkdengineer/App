@@ -15,6 +15,7 @@ import useLocalize from '@hooks/useLocalize';
 import useOnyx from '@hooks/useOnyx';
 import useThemeStyles from '@hooks/useThemeStyles';
 
+import {appendAccountingConnectionQuery, getAccountingConnectionFromParams} from '@libs/accountingConnectionQuery';
 import Clipboard from '@libs/Clipboard';
 import Navigation from '@libs/Navigation/Navigation';
 import {getContactMethod} from '@libs/UserUtils';
@@ -31,6 +32,7 @@ import type {ComponentRef} from 'react';
 // eslint-disable-next-line no-restricted-imports
 import type {ScrollView as RNScrollView} from 'react-native';
 
+import {useRoute} from '@react-navigation/native';
 import React, {useCallback, useEffect, useRef} from 'react';
 import {View} from 'react-native';
 
@@ -48,6 +50,9 @@ function DynamicVerifyPage() {
     const contactMethod = getContactMethod(account?.primaryLogin, session?.email);
     const formRef = useRef<BaseTwoFactorAuthFormRef>(null);
     const backPath = useDynamicBackPath(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_VERIFY.path);
+    const route = useRoute();
+    // Back paths drop suffix query params, so put the connector back before opening the success step.
+    const backPathWithConnection = appendAccountingConnectionQuery(backPath, getAccountingConnectionFromParams(route.params));
 
     useEffect(() => {
         clearAccountMessages();
@@ -60,8 +65,8 @@ function DynamicVerifyPage() {
         if (!account?.requiresTwoFactorAuth || !account.codesAreCopied || account.twoFactorAuthSecretKey) {
             return;
         }
-        Navigation.navigate(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_SUCCESS.path, backPath), {forceReplace: true});
-    }, [account?.codesAreCopied, account?.requiresTwoFactorAuth, account?.twoFactorAuthSecretKey, backPath]);
+        Navigation.navigate(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_SUCCESS.path, backPathWithConnection), {forceReplace: true});
+    }, [account?.codesAreCopied, account?.requiresTwoFactorAuth, account?.twoFactorAuthSecretKey, backPathWithConnection]);
 
     /**
      * Splits the two-factor auth secret key in 4 chunks
@@ -98,7 +103,7 @@ function DynamicVerifyPage() {
                 text: translate('twoFactorAuth.stepVerify'),
                 total: 2,
             }}
-            onBackButtonPress={() => Navigation.goBack(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_ROOT.path, backPath))}
+            onBackButtonPress={() => Navigation.goBack(createDynamicRoute(DYNAMIC_ROUTES.TWO_FACTOR_AUTH_ROOT.path, backPathWithConnection))}
             shouldEnableMaxHeight={false}
         >
             <ScrollView

@@ -1000,6 +1000,9 @@ type SettingsNavigatorParamList = {
     [SCREENS.WORKSPACE.ACCOUNTING.XERO_SETUP]: {
         policyID: string;
     };
+    [SCREENS.WORKSPACE.ACCOUNTING.ZOHO_BOOKS_SETUP]: {
+        policyID: string;
+    };
     [SCREENS.WORKSPACE.ACCOUNTING.XERO_IMPORT]: {
         policyID: string;
     };

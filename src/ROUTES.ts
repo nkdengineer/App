@@ -153,18 +153,22 @@ const DYNAMIC_ROUTES = {
     TWO_FACTOR_AUTH_VERIFY_ACCOUNT: {
         path: 'two-factor-auth/verify-account',
         entryScreens: ['*'],
+        queryParams: ['accountingConnection'],
     },
     TWO_FACTOR_AUTH_ROOT: {
         path: 'two-factor-auth',
         entryScreens: ['*'],
+        queryParams: ['accountingConnection'],
     },
     TWO_FACTOR_AUTH_VERIFY: {
         path: 'two-factor-auth/verify',
         entryScreens: ['*'],
+        queryParams: ['accountingConnection'],
     },
     TWO_FACTOR_AUTH_SUCCESS: {
         path: 'two-factor-auth/success',
         entryScreens: ['*'],
+        queryParams: ['accountingConnection'],
     },
     ADD_BANK_ACCOUNT_VERIFY_ACCOUNT: {
         path: 'add-bank-account/verify-account',
@@ -4490,6 +4494,10 @@ const ROUTES = {
     POLICY_ACCOUNTING_XERO_SETUP: {
         route: 'workspaces/:policyID/accounting/xero/setup',
         getRoute: (policyID: string) => `workspaces/${policyID}/accounting/xero/setup` as const,
+    },
+    POLICY_ACCOUNTING_ZOHO_BOOKS_SETUP: {
+        route: 'workspaces/:policyID/accounting/zoho-books/setup',
+        getRoute: (policyID: string) => `workspaces/${policyID}/accounting/zoho-books/setup` as const,
     },
     POLICY_ACCOUNTING_XERO_IMPORT: {
         route: 'workspaces/:policyID/accounting/xero/import',
