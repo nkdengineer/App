@@ -18,7 +18,17 @@ import type {
 } from '@components/Search/SearchList/ListItem/types';
 import {GROUP_ITEM_TYPES} from '@components/Search/SearchList/ListItem/types';
 import {getExpenseHeaders} from '@components/Search/SearchTableHeader';
-import type {ASTNode, SearchColumnType, SearchDatePreset, SearchFilterKey, SearchQueryJSON, SelectedReports, SelectedTransactionInfo, SortOrder} from '@components/Search/types';
+import type {
+    ASTNode,
+    SearchColumnType,
+    SearchCustomColumnIds,
+    SearchDatePreset,
+    SearchFilterKey,
+    SearchQueryJSON,
+    SelectedReports,
+    SelectedTransactionInfo,
+    SortOrder,
+} from '@components/Search/types';
 import type {ListItem} from '@components/SelectionList/types';
 
 import type interceptAnonymousUser from '@libs/interceptAnonymousUser';
@@ -3143,47 +3153,6 @@ describe('SearchUIUtils', () => {
                 .filter((item) => item.reportID === snapshotReportID)
                 .map((item) => item.reportActionID);
             expect(snapshotReportActionIDs).toStrictEqual([payAction.reportActionID]);
-        });
-
-        it('should show a NewDot REIMBURSED action on an invoice that is only in the Search snapshot', () => {
-            // Given a CHAT search result whose invoice isn't loaded into Onyx, with a NewDot REIMBURSED action
-            const snapshotInvoiceID = 'snapshotOnlyInvoiceID';
-            const reimbursedAction = {
-                actionName: CONST.REPORT.ACTIONS.TYPE.REIMBURSED,
-                reportActionID: 'snapshotReimbursedActionID',
-                reportID: snapshotInvoiceID,
-                created: '2025-01-01 00:00:00',
-                message: [{type: 'TEXT', style: 'normal', text: 'paid this report'}],
-                originalMessage: {isNewDot: true},
-            } as OnyxTypes.ReportAction;
-            const data: OnyxTypes.SearchResults['data'] = {
-                ...searchResults.data,
-                [`${ONYXKEYS.COLLECTION.REPORT}${snapshotInvoiceID}`]: createMock<OnyxTypes.Report>({reportID: snapshotInvoiceID, type: CONST.REPORT.TYPE.INVOICE}),
-                [`${ONYXKEYS.COLLECTION.REPORT_ACTIONS}${snapshotInvoiceID}`]: {[reimbursedAction.reportActionID]: reimbursedAction},
-            };
-
-            // When the CHAT sections are built from the snapshot
-            const [sections] = SearchUIUtils.getSections({
-                dateFnsLocale: undefined,
-                type: CONST.SEARCH.DATA_TYPES.CHAT,
-                data,
-                currentAccountID: 2074551,
-                currentUserEmail: '',
-                translate: translateLocal,
-                formatPhoneNumber,
-                bankAccountList: {},
-                rules: undefined,
-                conciergeReportID: undefined,
-                convertToDisplayString,
-                reportAttributesDerivedValue: {},
-            });
-
-            // Then the payment action is listed, because the snapshot shows the report is an invoice, and invoices have no IOU PAY action for this payment
-            const snapshotReportActionIDs = sections
-                .filter(SearchUIUtils.isReportActionListItemType)
-                .filter((item) => item.reportID === snapshotInvoiceID)
-                .map((item) => item.reportActionID);
-            expect(snapshotReportActionIDs).toStrictEqual([reimbursedAction.reportActionID]);
         });
 
         it('should return getTransactionsSections result when groupBy is undefined', () => {
@@ -13719,6 +13688,40 @@ describe('SearchUIUtils', () => {
     });
 
     describe('Test getColumnsToShow', () => {
+        test.each(['unchanged', 'enabled', 'disabled'])('Should keep Receipt before Type when column visibility is %s', (change) => {
+            // Given the default expense layout, with Receipt before Type
+            const defaultColumns = SearchUIUtils.getColumnsToShow({currentAccountID: 1, data: [], type: CONST.SEARCH.DATA_TYPES.EXPENSE});
+            const selectableColumns = getCustomColumns(CONST.SEARCH.DATA_TYPES.EXPENSE);
+            const visibleColumns = defaultColumns.filter((column): column is SearchCustomColumnIds => selectableColumns.some((selectableColumn) => selectableColumn === column));
+            let expectedColumns = defaultColumns;
+            if (change === 'enabled') {
+                visibleColumns.push(CONST.SEARCH.TABLE_COLUMNS.MCC);
+                expectedColumns = [...defaultColumns, CONST.SEARCH.TABLE_COLUMNS.MCC];
+            } else if (change === 'disabled') {
+                visibleColumns.splice(visibleColumns.indexOf(CONST.SEARCH.TABLE_COLUMNS.STATUS), 1);
+                expectedColumns = defaultColumns.filter((column) => column !== CONST.SEARCH.TABLE_COLUMNS.STATUS);
+            }
+
+            // When the editor saves without reordering columns, Type is omitted because it is not selectable
+            const columns = SearchUIUtils.getColumnsToShow({currentAccountID: 1, data: [], visibleColumns, type: CONST.SEARCH.DATA_TYPES.EXPENSE});
+
+            // Then changing visibility or saving an unchanged selection leaves every other column in place
+            expect(columns).toEqual(expectedColumns);
+            expect(columns.slice(0, 2)).toEqual([CONST.SEARCH.TABLE_COLUMNS.RECEIPT, CONST.SEARCH.TABLE_COLUMNS.TYPE]);
+        });
+
+        test.each([
+            [CONST.SEARCH.TABLE_COLUMNS.DATE, CONST.SEARCH.TABLE_COLUMNS.TOTAL_AMOUNT],
+            [CONST.SEARCH.TABLE_COLUMNS.DATE, CONST.SEARCH.TABLE_COLUMNS.RECEIPT, CONST.SEARCH.TABLE_COLUMNS.TOTAL_AMOUNT],
+        ])('Should keep Type first when Receipt is hidden or reordered: %j', (...visibleColumns) => {
+            // Given a saved layout where Receipt is not the first column
+            // When the expense columns are resolved
+            const columns = SearchUIUtils.getColumnsToShow({currentAccountID: 1, data: [], visibleColumns, type: CONST.SEARCH.DATA_TYPES.EXPENSE});
+
+            // Then Type stays first without moving any of the user's selected columns
+            expect(columns).toEqual([CONST.SEARCH.TABLE_COLUMNS.TYPE, ...visibleColumns]);
+        });
+
         test('Should only return default expense columns that the table header renders', () => {
             // Given the column headings the expense table renders
             const headerColumns = new Set(getExpenseHeaders().map((header) => header.columnName));

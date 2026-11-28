@@ -1355,6 +1355,13 @@ const translations: TranslationDeepObject<typeof en> = {
             [CONST.INSIGHTS.VIOLATION_STAGE.APPROVED]: 'Genehmigende',
             chartTitle: (title: string, stage: string) => `${title} (${stage})`,
         },
+        recentHistory: {
+            title: 'Letzte Aktivitäten',
+            dayAverageFor: (count: number, item: string) => `${count}-Tage-Durchschnitt für ${item}`,
+            weekAverageFor: (count: number, item: string) => `${count}-Wochen-Durchschnitt für ${item}`,
+            monthAverageFor: (count: number, item: string) => `${count}-Monatsdurchschnitt für ${item}`,
+            quarterAverageFor: (count: number, item: string) => `${count}-Quartalsdurchschnitt für ${item}`,
+        },
         flaggedExpenses: 'Markierte Ausgaben',
         noFlaggedExpensesInRange: 'Keine markierten Ausgaben in diesem Zeitraum',
     },
@@ -2188,6 +2195,10 @@ const translations: TranslationDeepObject<typeof en> = {
         payViaABA: 'Per ABA bezahlen',
         missingABADepositAccount: ({name}: {name: string}) => `${name} hat kein AUD-Bankkonto. Bitte bitten Sie die Person, eines hinzuzufügen, und versuchen Sie es erneut.`,
         submittersMissingABADepositAccount: 'Eine oder mehrere einreichende Personen haben kein AUD-Bankkonto. Bitte bitten Sie sie, eines hinzuzufügen, und versuchen Sie es erneut.',
+        waitForABAFile: 'Bitte warten Sie, während wir die ABA-Datei erstellen.',
+        successABAFile: 'Ihre ABA-Datei wurde erstellt! Falls der Download nicht automatisch gestartet wurde, verwenden Sie die Schaltfläche unten.',
+        reportsWithNothingToPayViaABA: 'Ein oder mehrere Berichte haben keinen zu zahlenden Betrag und wurden daher nicht in die ABA-Datei aufgenommen.',
+        reportsLeftOutOfABAFile: 'Ein oder mehrere Berichte wurden nicht in die ABA-Datei aufgenommen. Bitte versuchen Sie es später noch einmal.',
     },
     transactionMerge: {
         listPage: {
@@ -4522,9 +4533,10 @@ ${amount} für ${merchant} – ${date}`,
     },
     welcomeSignUpForm: {
         join: 'Beitreten',
-        transactionalSMSConsent: 'Mit der Angabe meiner Telefonnummer stimme ich zu, transaktionsbezogene Kontobenachrichtigungen von Expensify zu erhalten.',
-        transactionalSMSConsentFinePrint: 'Es können die üblichen Gebühren für Nachrichten und Daten anfallen. Antworte STOP, um dich abzumelden.',
+        smsConsentIntro: 'Mit der Angabe meiner Telefonnummer:',
+        transactionalSMSConsent: 'Ich stimme zu, transaktionsbezogene Kontobenachrichtigungen von Expensify zu erhalten.',
         marketingSMSConsent: 'Ich stimme zu, Marketing-SMS von Expensify zu erhalten.',
+        termsWithSMSRates: `<muted-text-xs>Durch das Einloggen stimmst du den <a href="${CONST.OLD_DOT_PUBLIC_URLS.TERMS_URL}">Nutzungsbedingungen</a> und der <a href="${CONST.OLD_DOT_PUBLIC_URLS.PRIVACY_URL}">Datenschutzerklärung</a> zu. Es können die üblichen Gebühren für Nachrichten und Daten anfallen. Die Nachrichtenhäufigkeit variiert. Antworte HELP, um Hilfe zu erhalten. Antworte STOP, um dich abzumelden.</muted-text-xs>`,
     },
     detailsPage: {
         localTime: 'Ortszeit',
@@ -6884,6 +6896,8 @@ _Für ausführlichere Anweisungen [besuchen Sie unsere Hilfeseite](${CONST.NETSU
                 description: 'Wählen Sie aus, wohin erstattungsfähige Ausgaben exportiert werden sollen.',
                 accountRequiredError: 'Bitte wählen Sie ein Rillet-Erstattungskonto aus.',
             },
+            autoCreateVendor: 'Lieferanten automatisch erstellen',
+            autoCreateVendorDescription: 'Expensify erstellt in Rillet automatisch Lieferanten, wenn sie noch nicht vorhanden sind.',
             achPaymentAccount: {label: 'ACH-Zahlungskonto', description: 'Wählen Sie aus, von wo Berichte bezahlt werden sollen, und wir erstellen die Zahlung in Rillet.'},
         },
         dualEntry: {

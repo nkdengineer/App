@@ -1401,6 +1401,13 @@ const translations: TranslationDeepObject<typeof en> = {
             [CONST.INSIGHTS.VIOLATION_STAGE.APPROVED]: 'Εγκριτές',
             chartTitle: (title: string, stage: string) => `${title} (${stage})`,
         },
+        recentHistory: {
+            title: 'Πρόσφατο ιστορικό',
+            dayAverageFor: (count: number, item: string) => `${count}ήμερος μέσος όρος για ${item}`,
+            weekAverageFor: (count: number, item: string) => `μέσος όρος ${count} εβδομάδων για ${item}`,
+            monthAverageFor: (count: number, item: string) => `${count}-μηνιαίος μέσος όρος για ${item}`,
+            quarterAverageFor: (count: number, item: string) => `Μέσος όρος ${count} τριμήνων για το στοιχείο ${item}`,
+        },
         flaggedExpenses: 'Επισημασμένες δαπάνες',
         noFlaggedExpensesInRange: 'Δεν υπάρχουν επισημασμένες δαπάνες σε αυτό το εύρος',
     },
@@ -2234,6 +2241,10 @@ const translations: TranslationDeepObject<typeof en> = {
         payViaABA: 'Πληρωμή μέσω ABA',
         missingABADepositAccount: ({name}: {name: string}) => `Ο/Η ${name} δεν έχει τραπεζικό λογαριασμό σε AUD. Παρακαλούμε ζητήστε τους να προσθέσουν έναν και δοκιμάστε ξανά.`,
         submittersMissingABADepositAccount: 'Ένας ή περισσότεροι αποστολείς δεν έχουν τραπεζικό λογαριασμό σε AUD. Παρακαλούμε ζητήστε τους να προσθέσουν έναν και προσπαθήστε ξανά.',
+        waitForABAFile: 'Παρακαλούμε περιμένετε όσο δημιουργούμε το αρχείο ABA.',
+        successABAFile: 'Το αρχείο ABA σας δημιουργήθηκε! Αν δεν έγινε αυτόματη λήψη, χρησιμοποιήστε το παρακάτω κουμπί.',
+        reportsWithNothingToPayViaABA: 'Μία ή περισσότερες αναφορές δεν έχουν κάτι προς πληρωμή, επομένως δεν συμπεριλήφθηκαν στο αρχείο ABA.',
+        reportsLeftOutOfABAFile: 'Ένα ή περισσότερα αναλυτικά δελτία δεν συμπεριλήφθηκαν στο αρχείο ABA. Παρακαλούμε δοκιμάστε ξανά αργότερα.',
     },
     transactionMerge: {
         listPage: {
@@ -4568,9 +4579,10 @@ ${amount} για ${merchant} - ${date}`,
     },
     welcomeSignUpForm: {
         join: 'Συμμετοχή',
-        transactionalSMSConsent: 'Δίνοντας τον αριθμό τηλεφώνου μου, συμφωνώ να λαμβάνω ειδοποιήσεις συναλλαγών για τον λογαριασμό μου από την Expensify.',
-        transactionalSMSConsentFinePrint: 'Ενδέχεται να ισχύουν οι τυπικές χρεώσεις μηνυμάτων και δεδομένων. Απαντήστε STOP για διακοπή.',
+        smsConsentIntro: 'Δίνοντας τον αριθμό τηλεφώνου μου:',
+        transactionalSMSConsent: 'Συμφωνώ να λαμβάνω ειδοποιήσεις συναλλαγών για τον λογαριασμό μου από την Expensify.',
         marketingSMSConsent: 'Συμφωνώ να λαμβάνω προωθητικά μηνύματα από την Expensify.',
+        termsWithSMSRates: `<muted-text-xs>Κάνοντας σύνδεση, συμφωνείτε με τους <a href="${CONST.OLD_DOT_PUBLIC_URLS.TERMS_URL}">Όρους Παροχής Υπηρεσιών</a> και την <a href="${CONST.OLD_DOT_PUBLIC_URLS.PRIVACY_URL}">Προστασία Προσωπικών Δεδομένων</a>. Ενδέχεται να ισχύουν οι τυπικές χρεώσεις μηνυμάτων και δεδομένων. Η συχνότητα των μηνυμάτων ποικίλλει. Απαντήστε HELP για βοήθεια. Απαντήστε STOP για διακοπή.</muted-text-xs>`,
     },
     detailsPage: {
         localTime: 'Τοπική ώρα',
@@ -6987,6 +6999,8 @@ _Για πιο αναλυτικές οδηγίες, [επισκεφθείτε τ
                 description: 'Επιλέξτε πού θα εξαχθούν οι επιστρεπτέες δαπάνες.',
                 accountRequiredError: 'Παρακαλούμε επιλέξτε έναν λογαριασμό αποζημίωσης Rillet.',
             },
+            autoCreateVendor: 'Αυτόματη δημιουργία προμηθευτών',
+            autoCreateVendorDescription: 'Η Expensify θα δημιουργεί αυτόματα προμηθευτές στο Rillet, αν δεν υπάρχουν ήδη.',
             achPaymentAccount: {label: 'λογαριασμός πληρωμών ACH', description: 'Επιλέξτε από πού θα πληρώνονται οι αναφορές και θα δημιουργήσουμε την πληρωμή στο Rillet.'},
         },
         dualEntry: {

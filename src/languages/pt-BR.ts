@@ -1357,6 +1357,13 @@ const translations: TranslationDeepObject<typeof en> = {
             [CONST.INSIGHTS.VIOLATION_STAGE.APPROVED]: 'Aprovadores',
             chartTitle: (title: string, stage: string) => `${title} (${stage})`,
         },
+        recentHistory: {
+            title: 'Histórico recente',
+            dayAverageFor: (count: number, item: string) => `Média de ${count} dias para ${item}`,
+            weekAverageFor: (count: number, item: string) => `Média de ${count} semanas de ${item}`,
+            monthAverageFor: (count: number, item: string) => `Média de ${count} mês(es) para ${item}`,
+            quarterAverageFor: (count: number, item: string) => `Média de ${count} trimestres de ${item}`,
+        },
         flaggedExpenses: 'Despesas sinalizadas',
         noFlaggedExpensesInRange: 'Nenhuma despesa sinalizada neste intervalo',
     },
@@ -2174,6 +2181,10 @@ const translations: TranslationDeepObject<typeof en> = {
         payViaABA: 'Pagar via ABA',
         missingABADepositAccount: ({name}: {name: string}) => `${name} não tem uma conta bancária em AUD. Peça para que adicione uma e tente novamente.`,
         submittersMissingABADepositAccount: 'Um ou mais responsáveis pelo envio não têm uma conta bancária em AUD. Peça para que adicionem uma e tente novamente.',
+        waitForABAFile: 'Aguarde enquanto geramos o arquivo ABA.',
+        successABAFile: 'Seu arquivo ABA foi gerado! Se ele não foi baixado automaticamente, use o botão abaixo.',
+        reportsWithNothingToPayViaABA: 'Um ou mais relatórios não têm nada a pagar, então não foram incluídos no arquivo ABA.',
+        reportsLeftOutOfABAFile: 'Um ou mais relatórios não foram incluídos no arquivo ABA. Tente novamente mais tarde.',
     },
     transactionMerge: {
         listPage: {
@@ -4499,9 +4510,10 @@ ${amount} para ${merchant} - ${date}`,
     },
     welcomeSignUpForm: {
         join: 'Participar',
-        transactionalSMSConsent: 'Ao fornecer meu número de telefone, concordo em receber alertas transacionais da minha conta da Expensify.',
-        transactionalSMSConsentFinePrint: 'Podem ser aplicadas tarifas padrão de mensagens e dados. Responda STOP para cancelar.',
+        smsConsentIntro: 'Ao fornecer meu número de telefone:',
+        transactionalSMSConsent: 'Concordo em receber alertas transacionais da minha conta da Expensify.',
         marketingSMSConsent: 'Concordo em receber mensagens de texto de marketing da Expensify.',
+        termsWithSMSRates: `<muted-text-xs>Ao entrar, você concorda com os <a href="${CONST.OLD_DOT_PUBLIC_URLS.TERMS_URL}">Termos de Serviço</a> e a <a href="${CONST.OLD_DOT_PUBLIC_URLS.PRIVACY_URL}">Privacidade</a>. Podem ser aplicadas tarifas padrão de mensagens e dados. A frequência das mensagens varia. Responda HELP para obter ajuda. Responda STOP para cancelar.</muted-text-xs>`,
     },
     detailsPage: {
         localTime: 'Hora local',
@@ -6847,6 +6859,8 @@ _Para instruções mais detalhadas, [visite nossa central de ajuda](${CONST.NETS
                 description: 'Escolha para onde exportar as despesas reembolsáveis.',
                 accountRequiredError: 'Selecione uma conta de reembolso Rillet.',
             },
+            autoCreateVendor: 'Criar fornecedores automaticamente',
+            autoCreateVendorDescription: 'O Expensify criará automaticamente fornecedores no Rillet se eles ainda não existirem.',
             achPaymentAccount: {label: 'Conta de pagamento ACH', description: 'Escolha de onde pagar os relatórios e criaremos o pagamento no Rillet.'},
         },
         dualEntry: {
