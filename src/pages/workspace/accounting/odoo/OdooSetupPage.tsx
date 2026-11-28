@@ -13,7 +13,7 @@ import useOnyx from '@hooks/useOnyx';
 import useThemeStyles from '@hooks/useThemeStyles';
 
 import {isAuthenticationError} from '@libs/actions/connections';
-import {connectToOdoo, resetOdooCredentialsForm} from '@libs/actions/connections/Odoo';
+import {connectToOdoo} from '@libs/actions/connections/Odoo';
 import {addErrorMessage} from '@libs/ErrorUtils';
 import Navigation from '@libs/Navigation/Navigation';
 import type {PlatformStackScreenProps} from '@libs/Navigation/PlatformStackNavigation/types';
@@ -24,7 +24,7 @@ import ONYXKEYS from '@src/ONYXKEYS';
 import type SCREENS from '@src/SCREENS';
 import INPUT_IDS from '@src/types/form/OdooCredentialsForm';
 
-import React, {useEffect} from 'react';
+import React from 'react';
 import {View} from 'react-native';
 
 type OdooSetupPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.WORKSPACE.ACCOUNTING.ODOO_SETUP>;
@@ -38,24 +38,10 @@ function OdooSetupPage({route}: OdooSetupPageProps) {
     const [shouldBeBlocked = false] = useOnyx(`${ONYXKEYS.COLLECTION.POLICY}${policyID}`, {
         selector: (policy) => !!policy?.connections?.odoo?.config?.isConfigured && !isAuthenticationError(policy, CONST.POLICY.CONNECTIONS.NAME.ODOO),
     });
-    const [hasConnectionSucceeded = false] = useOnyx(ONYXKEYS.FORMS.ODOO_CREDENTIALS_FORM, {selector: (form) => !!form?.hasConnectionSucceeded});
-
-    // Start without a previous attempt's error or result, and leave none behind for the next visit
-    useEffect(() => {
-        resetOdooCredentialsForm();
-        return resetOdooCredentialsForm;
-    }, []);
-
-    // The page waits for the server to accept the URL, so a rejected URL shows its error here instead of after the page closed
-    useEffect(() => {
-        if (!hasConnectionSucceeded) {
-            return;
-        }
-        Navigation.dismissModal();
-    }, [hasConnectionSucceeded]);
 
     const confirmCredentials = (values: FormOnyxValues<typeof ONYXKEYS.FORMS.ODOO_CREDENTIALS_FORM>) => {
         connectToOdoo(policyID, values[INPUT_IDS.ODOO_URL].trim(), values[INPUT_IDS.API_KEY].trim());
+        Navigation.dismissModal();
     };
 
     const validate = (values: FormOnyxValues<typeof ONYXKEYS.FORMS.ODOO_CREDENTIALS_FORM>) => {

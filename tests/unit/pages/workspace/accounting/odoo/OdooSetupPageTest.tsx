@@ -8,7 +8,6 @@ import Navigation from '@libs/Navigation/Navigation';
 import OdooSetupPage from '@pages/workspace/accounting/odoo/OdooSetupPage';
 
 import type ONYXKEYS from '@src/ONYXKEYS';
-import type {OdooCredentialsForm} from '@src/types/form/OdooCredentialsForm';
 import type {Policy} from '@src/types/onyx';
 
 import React from 'react';
@@ -31,14 +30,10 @@ jest.mock('@hooks/useLocalize', () => () => ({
 }));
 jest.mock('@hooks/useThemeStyles', () => () => ({}));
 jest.mock('@hooks/useAutoFocusInput', () => () => ({inputCallbackRef: jest.fn()}));
-// The policy and form state the page reads, passed through the page's selector like useOnyx does
+// The policy the page reads, passed through the page's selector like useOnyx does
 let mockPolicy: Partial<Policy> | undefined;
-let mockForm: Partial<OdooCredentialsForm> | undefined;
-jest.mock('@hooks/useOnyx', () => (key: string, options?: {selector?: (value: unknown) => unknown}) => {
-    const value: unknown = key === 'odooCredentialsForm' ? mockForm : mockPolicy;
-    return [options?.selector ? options.selector(value) : value];
-});
-jest.mock('@libs/actions/connections/Odoo', () => ({connectToOdoo: jest.fn(), resetOdooCredentialsForm: jest.fn()}));
+jest.mock('@hooks/useOnyx', () => (_key: string, options?: {selector?: (policy: Partial<Policy> | undefined) => unknown}) => [options?.selector ? options.selector(mockPolicy) : mockPolicy]);
+jest.mock('@libs/actions/connections/Odoo', () => ({connectToOdoo: jest.fn()}));
 jest.mock('@libs/Navigation/Navigation', () => ({dismissModal: jest.fn()}));
 jest.mock('@components/ConnectionLayout', () => ({children, shouldBeBlocked}: {children: React.ReactNode; shouldBeBlocked?: boolean}) => {
     mockLayoutProps.current = {shouldBeBlocked};
@@ -60,7 +55,6 @@ function renderPage() {
 
 function renderOdooSetupPage(policy?: Partial<Policy>) {
     mockPolicy = policy;
-    mockForm = undefined;
     return render(renderPage());
 }
 
@@ -104,28 +98,16 @@ describe('OdooSetupPage', () => {
         expect(errors).toEqual({});
     });
 
-    it('connects with the trimmed URL and API key and keeps the page open until the server accepts them', () => {
+    it('connects with the trimmed URL and API key and closes the setup page', () => {
         // Given the setup page for a workspace that isn't connected yet
         renderOdooSetupPage();
 
         // When the admin confirms values pasted with surrounding spaces
         mockFormProps.current?.onSubmit({odooURL: ' https://acme.odoo.com ', apiKey: ' api-key-1 '});
 
-        // Then the workspace connects with the clean values, and the page stays open so a rejected URL can show its error here
+        // Then the workspace connects with the clean values, and the page closes right away because a wrong database or key shows up as a sync error on the Accounting page
         expect(connectToOdoo).toHaveBeenCalledWith(POLICY_ID, 'https://acme.odoo.com', 'api-key-1');
-        expect(Navigation.dismissModal).not.toHaveBeenCalled();
-    });
-
-    it('closes the setup page once the server accepts the connection', () => {
-        // Given the setup page waiting on the connect request
-        const {rerender} = renderOdooSetupPage();
-
-        // When the server accepts the URL and key
-        mockForm = {hasConnectionSucceeded: true};
-        rerender(renderPage());
-
-        // Then the page closes so the Accounting page can show the sync
-        expect(Navigation.dismissModal).toHaveBeenCalledTimes(1);
+        expect(Navigation.dismissModal).toHaveBeenCalled();
     });
 
     it('blocks the page for a working connection but allows reconnecting after an authentication error', () => {
